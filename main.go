@@ -54,13 +54,6 @@ func convertPathToGo(path string) string {
 }
 
 func dump(gp *parser.GoProgram) {
-	fmt.Println(sep + " GODUMP " + sep)
-	gp.WriteString(os.Stdout)
-	fmt.Println()
-	fmt.Println(sep + " PARSE TREE " + sep)
-	gp.DumpTree()
-	fmt.Println(sep + " GO " + sep)
-	gp.Dump(os.Stdout)
 }
 
 func parseDirectory(dir string, cfg *parser.Config, outPath string,
@@ -128,8 +121,10 @@ func parseJava(path string, cfg *parser.Config, dirPath string,
 			}
 		}()
 
-		sym := parser.JulyParse(l)
-		fmt.Printf("parser returned %d\n", sym)
+		prtn := parser.JulyParse(l)
+		if prtn != 0 {
+			fmt.Fprintf(os.Stderr, "parser returned %d\n", prtn)
+		}
 
 		if l.JavaProgram() == nil {
 			fmt.Println("No code found")
@@ -139,13 +134,21 @@ func parseJava(path string, cfg *parser.Config, dirPath string,
 			gp := analyze(l.JavaProgram(), path, cfg, rules, print_report,
 				verbose)
 			if print_report {
-				dump(gp)
+				fmt.Println(sep + " GODUMP " + sep)
+				gp.WriteString(os.Stdout)
+				fmt.Println()
+				fmt.Println(sep + " PARSE TREE " + sep)
+				gp.DumpTree()
+				fmt.Println(sep + " GO " + sep)
+				gp.Dump(os.Stdout)
 			}
 			if dirPath != "" {
 				if err := gp.Write(dirPath); err != nil {
 					fmt.Fprintf(os.Stderr, "Cannot write %v: %v\n", gp.Name(),
 						err)
 				}
+			} else if !print_report {
+				gp.Dump(os.Stdout)
 			}
 		}
 
@@ -166,8 +169,8 @@ func main() {
 	var dirPath string
 	flag.StringVar(&dirPath, "dir", "", "Directory where Go code is written")
 
-	var noReportFlag bool
-	flag.BoolVar(&noReportFlag, "no_report", false,
+	var reportFlag bool
+	flag.BoolVar(&reportFlag, "report", false,
 		"Do not print dumps/translations to stdout")
 
 	var verboseFlag bool
@@ -199,10 +202,10 @@ func main() {
 		}
 
 		if finfo.IsDir() {
-			parseDirectory(f, cfg, dirPath, debugLexFlag, !noReportFlag,
+			parseDirectory(f, cfg, dirPath, debugLexFlag, reportFlag,
 				verboseFlag)
 		} else {
-			parseFile(f, finfo, cfg, dirPath, debugLexFlag, !noReportFlag,
+			parseFile(f, finfo, cfg, dirPath, debugLexFlag, reportFlag,
 				verboseFlag, true)
 		}
 	}
