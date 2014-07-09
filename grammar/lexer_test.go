@@ -2,6 +2,8 @@ package grammar
 
 import (
 	"testing"
+
+	"github.com/dglo/java2go/testutil"
 )
 
 func Test_FileLexer(t *testing.T) {
@@ -12,5 +14,5 @@ func Test_FileLexer(t *testing.T) {
 	rdr := NewStringReader(pgm)
 
 	lx := NewLexer(rdr, false)
-	assertNotNil(t, lx, "Lexer should not be nil")
+	testutil.AssertNotNil(t, lx, "Lexer should not be nil")
 }

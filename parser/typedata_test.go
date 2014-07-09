@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/dglo/java2go/testutil"
 )
 
 func Test_TypeData_Primitive(t *testing.T) {
@@ -17,7 +19,7 @@ func Test_TypeData_Primitive(t *testing.T) {
 			td := NewTypeDataPrimitive(str, dim)
 
 			_, is_nil := td.TypeName()
-			assertEqual(t, dim == 0 && strings.EqualFold(str, "void"), is_nil,
+			testutil.AssertEqual(t, dim == 0 && strings.EqualFold(str, "void"), is_nil,
 				str, "should not be nil", is_nil)
 
 			var expStr string
@@ -39,21 +41,21 @@ func Test_TypeData_Primitive(t *testing.T) {
 				expStr = "[]" + expStr
 			}
 
-			assertEqual(t, td.String(), expStr, "Expected", expStr,
+			testutil.AssertEqual(t, td.String(), expStr, "Expected", expStr,
 				"not", td.String())
 
-			assertFalse(t, td.isObject(), "Unexpected object", str)
+			testutil.AssertFalse(t, td.isObject(), "Unexpected object", str)
 		}
 	}
 
 	defer func() {
 		if x := recover(); x != nil {
-			assertEqual(t, x, "Unrecognized primitive type xxx")
+			testutil.AssertEqual(t, x, "Unrecognized primitive type xxx")
 		}
 	}()
 
 	td := NewTypeDataPrimitive("xxx", 0)
-	assertNotNil(t, td, "Got nil TypeData for bad primitive type")
+	testutil.AssertNotNil(t, td, "Got nil TypeData for bad primitive type")
 }
 
 type FakeDictionary struct {
@@ -92,10 +94,10 @@ func Test_TypeData_Object(t *testing.T) {
 func validate(t *testing.T, str string, dim int, td *TypeData,
 	fd *FakeDictionary) {
 	vt, is_nil := td.TypeName()
-	assertEqual(t, dim == 0 && strings.EqualFold(str, "void"), is_nil,
+	testutil.AssertEqual(t, dim == 0 && strings.EqualFold(str, "void"), is_nil,
 		str, "should not be nil", is_nil)
 	if !is_nil {
-		assertNotNil(t, vt, str, "dim", dim, "is nil ::", vt)
+		testutil.AssertNotNil(t, vt, str, "dim", dim, "is nil ::", vt)
 	}
 
 	expName := str
@@ -108,7 +110,7 @@ func validate(t *testing.T, str string, dim int, td *TypeData,
 		}
 		expName = fmt.Sprintf("array_%s%s_dim%d", star, str, dim)
 	}
-	assertEqual(t, expName, td.Name(), "Expected name", expName,
+	testutil.AssertEqual(t, expName, td.Name(), "Expected name", expName,
 		"not", td.Name())
 
 	var expStr string
@@ -121,14 +123,14 @@ func validate(t *testing.T, str string, dim int, td *TypeData,
 		expStr = "[]" + expStr
 	}
 
-	assertEqual(t, expStr, td.String(), "Expected string ", expStr,
+	testutil.AssertEqual(t, expStr, td.String(), "Expected string ", expStr,
 		"not", td.String())
 
 	if fd != nil {
 		if dim == 0 {
-			assertTrue(t, td.isObject(), "Expected object", str)
+			testutil.AssertTrue(t, td.isObject(), "Expected object", str)
 		} else {
-			assertFalse(t, td.isObject(), "Unexpected object", str)
+			testutil.AssertFalse(t, td.isObject(), "Unexpected object", str)
 		}
 	}
 }

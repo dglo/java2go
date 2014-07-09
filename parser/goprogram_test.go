@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+
+	"github.com/dglo/java2go/grammar"
+	"github.com/dglo/java2go/testutil"
 )
 
 func Test_FixName(t *testing.T) {
@@ -15,9 +18,9 @@ func Test_FixName(t *testing.T) {
 	modmap["private"] = "naMe"
 
 	for modtype, fixed := range modmap {
-		jmod := NewJModifiers(modtype, nil)
+		jmod := grammar.NewJModifiers(modtype, nil)
 		nm := fixName(raw, jmod)
-		assertEqual(t, nm, fixed, "For modtype", modtype, "expected", fixed,
+		testutil.AssertEqual(t, nm, fixed, "For modtype", modtype, "expected", fixed,
 			"not", nm)
 	}
 }
@@ -29,37 +32,37 @@ func Test_GoProgram_Basic(t *testing.T) {
 	gp.Analyze(nil)
 
 	rcvr := gp.Receiver("foo")
-	assertEqual(t, rcvr, "rcvr", "Expected rcvr, not", rcvr)
+	testutil.AssertEqual(t, rcvr, "rcvr", "Expected rcvr, not", rcvr)
 
 	imap := gp.Imports()
-	assertNotNil(t, imap, "ImportMap() should not return nil")
-	assertEqual(t, len(imap), 0, "Did not expect ImportMap to contain", imap)
+	testutil.AssertNotNil(t, imap, "ImportMap() should not return nil")
+	testutil.AssertEqual(t, len(imap), 0, "Did not expect ImportMap to contain", imap)
 
 	decls := gp.Decls()
-	assertNotNil(t, decls, "Decls() should not return nil")
-	assertEqual(t, len(decls), 0, "Did not expect Decls to contain", decls)
+	testutil.AssertNotNil(t, decls, "Decls() should not return nil")
+	testutil.AssertEqual(t, len(decls), 0, "Did not expect Decls to contain", decls)
 
 	dout := &bytes.Buffer{}
 	gp.Dump(dout)
 	dstr := dout.String()
 	expDstr := "package main\n"
-	assertEqual(t, dstr, expDstr, "Expected '", expDstr, "' not '", dstr, "'")
+	testutil.AssertEqual(t, dstr, expDstr, "Expected '", expDstr, "' not '", dstr, "'")
 
 	file := gp.File()
-	assertNotNil(t, file, "File() should not return nil")
-	assertNotNil(t, file.Name, "File.Name should not be nil")
-	assertNotNil(t, file.Name.Name, "main",
+	testutil.AssertNotNil(t, file, "File() should not return nil")
+	testutil.AssertNotNil(t, file.Name, "File.Name should not be nil")
+	testutil.AssertNotNil(t, file.Name.Name, "main",
 		"File.Name.Name should be", "main", file.Name.Name)
-	assertNotNil(t, file.Decls, "File.Decls() should not return nil")
-	assertEqual(t, len(file.Decls), 0,
+	testutil.AssertNotNil(t, file.Decls, "File.Decls() should not return nil")
+	testutil.AssertEqual(t, len(file.Decls), 0,
 		"Did not expect File.Decls to contain", file.Decls)
-	assertNotNil(t, file.Imports, "File.Imports() should not return nil")
-	assertEqual(t, len(file.Imports), 0,
+	testutil.AssertNotNil(t, file.Imports, "File.Imports() should not return nil")
+	testutil.AssertEqual(t, len(file.Imports), 0,
 		"Did not expect File.Imports to contain", file.Imports)
-	assertEqual(t, len(file.Unresolved), 0,
+	testutil.AssertEqual(t, len(file.Unresolved), 0,
 		"File.Unresolved should be empty but contains", len(file.Unresolved),
 		"entries")
-	assertEqual(t, len(file.Comments), 0,
+	testutil.AssertEqual(t, len(file.Comments), 0,
 		"File.Comments should be empty but contains", len(file.Comments),
 		"entries")
 
