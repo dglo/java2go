@@ -10,8 +10,8 @@ import (
 	"github.com/dglo/java2go/grammar"
 )
 
-// list of types which inherit from AbstractList
-var JavaListType = []string { "List", "ArrayList", "LinkedList", "Stack",
+// list of Java classes which inherit from AbstractList
+var javaListType = []string { "List", "ArrayList", "LinkedList", "Stack",
 	"Vector" }
 
 type TransformFunc func(parent GoObject, prog *GoProgram, cls GoClass,
@@ -249,7 +249,7 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 	}
 
 	var is_list bool
-	for _, n := range JavaListType {
+	for _, n := range javaListType {
 		if mref.govar.VarType().IsClass(n) {
 			is_list = true
 			break
@@ -308,6 +308,7 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 	return nil, true
 }
 
+// list of standard transformation rules
 var StandardRules = []TransformFunc {
 	TransformArrayLen,
 	TransformSysfile,

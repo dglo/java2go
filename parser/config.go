@@ -10,18 +10,22 @@ import (
 	"strings"
 )
 
+// configuration file
 type Config struct {
 	interfaceMap map[string]string
-	interfaceKeys []string
+	interfaceList []string
 	packageMap map[string]string
-	packageKeys []string
+	packageList []string
 	receiverMap map[string]string
-	receiverKeys []string
+	receiverList []string
 }
 
-const TYPE_INTERFACE = "INTERFACE"
-const TYPE_PACKAGE = "PACKAGE"
-const TYPE_RECEIVER = "RECEIVER"
+// keyword for defining Java interfaces
+const typeInterface = "INTERFACE"
+// keyword for mapping Java package names to Go names
+const typePackage = "PACKAGE"
+// keyword for declaring receiver names for a class
+const typeReceiver = "RECEIVER"
 
 func addEntry(entryMap map[string]string, typeName string, key string,
 	val string) map[string]string {
@@ -39,19 +43,19 @@ func addEntry(entryMap map[string]string, typeName string, key string,
 	return entryMap
 }
 
-func (cfg *Config) AddInterface(name string) {
-	cfg.interfaceMap = addEntry(cfg.interfaceMap, TYPE_INTERFACE, name, name)
-	cfg.interfaceKeys = nil
+func (cfg *Config) addInterface(name string) {
+	cfg.interfaceMap = addEntry(cfg.interfaceMap, typeInterface, name, name)
+	cfg.interfaceList = nil
 }
 
-func (cfg *Config) AddPackage(name string, value string) {
-	cfg.packageMap = addEntry(cfg.packageMap, TYPE_PACKAGE, name, value)
-	cfg.packageKeys = nil
+func (cfg *Config) addPackage(name string, value string) {
+	cfg.packageMap = addEntry(cfg.packageMap, typePackage, name, value)
+	cfg.packageList = nil
 }
 
-func (cfg *Config) AddReceiver(name string, value string) {
-	cfg.receiverMap = addEntry(cfg.receiverMap, TYPE_RECEIVER, name, value)
-	cfg.receiverKeys = nil
+func (cfg *Config) addReceiver(name string, value string) {
+	cfg.receiverMap = addEntry(cfg.receiverMap, typeReceiver, name, value)
+	cfg.receiverList = nil
 }
 
 func getValue(entryMap map[string]string, key string) string {
@@ -64,6 +68,7 @@ func getValue(entryMap map[string]string, key string) string {
 	return ""
 }
 
+// read the configuration file
 func ReadConfig(name string) *Config {
 	fd, err := os.Open(name)
 	if err != nil {
@@ -82,23 +87,23 @@ func ReadConfig(name string) *Config {
 		}
 
 		switch strings.ToUpper(flds[0]) {
-		case TYPE_INTERFACE:
+		case typeInterface:
 			if len(flds) != 2 {
 				log.Printf("Bad config line: %s\n", scan.Text())
 			} else {
-				cfg.AddInterface(flds[1])
+				cfg.addInterface(flds[1])
 			}
-		case TYPE_PACKAGE:
+		case typePackage:
 			if len(flds) != 4 {
 				log.Printf("Bad config line: %s\n", scan.Text())
 			} else {
-				cfg.AddPackage(flds[1], flds[3])
+				cfg.addPackage(flds[1], flds[3])
 			}
-		case TYPE_RECEIVER:
+		case typeReceiver:
 			if len(flds) != 4 {
 				log.Printf("Bad config line: %s\n", scan.Text())
 			} else {
-				cfg.AddReceiver(flds[1], flds[3])
+				cfg.addReceiver(flds[1], flds[3])
 			}
 		}
 	}
@@ -106,14 +111,16 @@ func ReadConfig(name string) *Config {
 	return cfg
 }
 
+// print the configuration data to the output
 func (cfg *Config) Dump(out io.Writer) {
 	need_nl := false
 
 	if len(cfg.packageMap) > 0 {
 		if need_nl { fmt.Fprintln(out) }
 		fmt.Fprintln(out, "# map Java packages to Go packages")
-		for _, k := range cfg.PackageKeys() {
-			fmt.Fprintf(out, "%v %v -> %v\n", TYPE_PACKAGE, k, cfg.Package(k))
+		for _, k := range cfg.packageKeys() {
+			fmt.Fprintf(out, "%v %v -> %v\n", typePackage, k,
+				cfg.packageName(k))
 		}
 		need_nl = true
 	}
@@ -122,8 +129,8 @@ func (cfg *Config) Dump(out io.Writer) {
 		if need_nl { fmt.Fprintln(out) }
 		fmt.Fprintln(out, "# names which should be treated as interfaces" +
 			" rather than structs")
-		for _, k := range cfg.Interfaces() {
-			fmt.Fprintf(out, "%v %v\n", TYPE_INTERFACE, k)
+		for _, k := range cfg.interfaces() {
+			fmt.Fprintf(out, "%v %v\n", typeInterface, k)
 		}
 		need_nl = true
 	}
@@ -131,14 +138,14 @@ func (cfg *Config) Dump(out io.Writer) {
 	if len(cfg.receiverMap) > 0 {
 		if need_nl { fmt.Fprintln(out) }
 		fmt.Fprintln(out, "# receiver name to use (other than 'rcvr')")
-		for _, k := range cfg.ReceiverKeys() {
-			fmt.Fprintf(out, "%v %v -> %v\n", TYPE_RECEIVER, k, cfg.Receiver(k))
+		for _, k := range cfg.receiverKeys() {
+			fmt.Fprintf(out, "%v %v -> %v\n", typeReceiver, k, cfg.receiver(k))
 		}
 		need_nl = true
 	}
 }
 
-func (cfg *Config) FindPackage(str string) string {
+func (cfg *Config) findPackage(str string) string {
 	var pstr string
 	var pval string
 	var pextra string
@@ -160,66 +167,67 @@ func (cfg *Config) FindPackage(str string) string {
 	return pval + pextra
 }
 
-func (cfg *Config) Interfaces() []string {
-	if cfg.interfaceKeys == nil {
-		cfg.interfaceKeys = make([]string, len(cfg.interfaceMap))
+func (cfg *Config) interfaces() []string {
+	if cfg.interfaceList == nil {
+		cfg.interfaceList = make([]string, len(cfg.interfaceMap))
 		var i int
 		for k := range cfg.interfaceMap {
-			cfg.interfaceKeys[i] = k
+			cfg.interfaceList[i] = k
 			i += 1
 		}
 
-		sort.Sort(sort.StringSlice(cfg.interfaceKeys))
+		sort.Sort(sort.StringSlice(cfg.interfaceList))
 	}
 
-	return cfg.interfaceKeys
+	return cfg.interfaceList
 }
 
-func (cfg *Config) IsInterface(name string) bool {
+func (cfg *Config) isInterface(name string) bool {
 	_, ok := cfg.interfaceMap[name]
 	return ok
 }
 
-func (cfg *Config) Package(key string) string {
+func (cfg *Config) packageName(key string) string {
 	return getValue(cfg.packageMap, key)
 }
 
-func (cfg *Config) PackageKeys() []string {
-	if cfg.packageKeys == nil {
-		cfg.packageKeys = make([]string, len(cfg.packageMap))
+func (cfg *Config) packageKeys() []string {
+	if cfg.packageList == nil {
+		cfg.packageList = make([]string, len(cfg.packageMap))
 		var i int
 		for k := range cfg.packageMap {
-			cfg.packageKeys[i] = k
+			cfg.packageList[i] = k
 			i += 1
 		}
 
-		sort.Sort(sort.StringSlice(cfg.packageKeys))
+		sort.Sort(sort.StringSlice(cfg.packageList))
 	}
 
-	return cfg.packageKeys
+	return cfg.packageList
 }
 
-func (cfg *Config) Receiver(key string) string {
+func (cfg *Config) receiver(key string) string {
 	return getValue(cfg.receiverMap, key)
 }
 
-func (cfg *Config) ReceiverKeys() []string {
-	if cfg.receiverKeys == nil {
-		cfg.receiverKeys = make([]string, len(cfg.receiverMap))
+func (cfg *Config) receiverKeys() []string {
+	if cfg.receiverList == nil {
+		cfg.receiverList = make([]string, len(cfg.receiverMap))
 
 		var i int
 		for k := range cfg.receiverMap {
-			cfg.receiverKeys[i] = k
+			cfg.receiverList[i] = k
 			i += 1
 		}
 
-		sort.Sort(sort.StringSlice(cfg.receiverKeys))
+		sort.Sort(sort.StringSlice(cfg.receiverList))
 	}
 
-	return cfg.receiverKeys
+	return cfg.receiverList
 }
 
+// print a minimal description of the configuration rules
 func (cfg *Config) String() string {
-	return fmt.Sprintf("Config[%d pkgs, %d rcvrs]", len(cfg.packageMap),
-		len(cfg.receiverMap))
+	return fmt.Sprintf("Config[%d ifaces, %d pkgs, %d rcvrs]",
+		len(cfg.interfaceMap), len(cfg.packageMap), len(cfg.receiverMap))
 }

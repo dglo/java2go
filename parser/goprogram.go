@@ -919,7 +919,7 @@ type GoClassDefinition struct {
 	statics []*GoStatic
 	vars []*GoVarInit
 	interfaces []GoInterface
-	methods *ClassMethodMap
+	methods *classMethodMap
 }
 
 func NewGoClassDefinition(program *GoProgram, parent GoMethodOwner,
@@ -1924,11 +1924,11 @@ func (ec *GoEnumConstant) WriteString(out io.Writer) {
 	io.WriteString(out, "]")
 }
 
-// EnumSlice is a []*GoEnumDefinition wrapper for sort.Sort()
-type EnumSlice []*GoEnumDefinition
-func (p EnumSlice) Len() int { return len(p) }
-func (p EnumSlice) Less(i, j int) bool { return p[i].name < p[j].name }
-func (p EnumSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+// enumSlice is a []*GoEnumDefinition wrapper for sort.Sort()
+type enumSlice []*GoEnumDefinition
+func (p enumSlice) Len() int { return len(p) }
+func (p enumSlice) Less(i, j int) bool { return p[i].name < p[j].name }
+func (p enumSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 type GoEnumDefinition struct {
 	name string
@@ -3026,7 +3026,7 @@ func (p InterfaceSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 type GoInterfaceDefinition struct {
 	name string
 
-	methods *InterfaceMethodMap
+	methods *interfaceMethodMap
 	constants []*GoConstant
 }
 
@@ -4680,7 +4680,7 @@ func (gp *GoProgram) analyzeImports(pgm *grammar.JProgramFile) {
 			grammar.ReportCastError("JImportStmt", iobj)
 		} else {
 			pkgstr := jimp.Name.PackageString()
-			iname := gp.config.FindPackage(pkgstr)
+			iname := gp.config.findPackage(pkgstr)
 			if iname == "" {
 				gp.addClass(&GoFakeClass{pkg: pkgstr,
 					name: jimp.Name.LastType()})
@@ -4746,7 +4746,7 @@ func (gp *GoProgram) Decls() []ast.Decl {
 	}
 
 	if gp.enums != nil && len(gp.enums) > 0 {
-		sort.Sort(EnumSlice(gp.enums))
+		sort.Sort(enumSlice(gp.enums))
 
 		for _, enum := range gp.enums {
 			edecls := enum.Decls(gp)
@@ -4892,7 +4892,7 @@ func (gp *GoProgram) IsInterface(name string) bool {
 		return false
 	}
 
-	return gp.config.IsInterface(name)
+	return gp.config.isInterface(name)
 }
 
 func (gp *GoProgram) Name() string {
@@ -4909,7 +4909,7 @@ func (gp *GoProgram) Receiver(class string) string {
 			rkey = gp.pkgname + "." + class
 		}
 
-		rcvr = gp.config.Receiver(rkey)
+		rcvr = gp.config.receiver(rkey)
 		if rcvr != "" {
 			return rcvr
 		}
@@ -4935,7 +4935,7 @@ func (gp *GoProgram) RunTransform(xform TransformFunc, prog *GoProgram, cls GoCl
 
 func (gp *GoProgram) setPackage(pgm *grammar.JProgramFile) {
 	if pgm != nil && pgm.Pkg != nil {
-		gp.pkgname = gp.config.FindPackage(pgm.Pkg.Name.String())
+		gp.pkgname = gp.config.findPackage(pgm.Pkg.Name.String())
 		if gp.pkgname == "" {
 			gp.pkgname = pgm.Pkg.Name.String()
 		}

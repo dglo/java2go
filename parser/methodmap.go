@@ -7,15 +7,15 @@ import (
 	"sort"
 )
 
-type MethodMapper interface {
+type methodMapper interface {
 	FixDuplicate(mlist []GoMethod, newmthd GoMethod) bool
 }
 
-type MethodMap struct {
+type methodMap struct {
 	methods map[string][]GoMethod
 }
 
-func (mmap *MethodMap) AddMethod(newmthd GoMethod, mapper MethodMapper) {
+func (mmap *methodMap) AddMethod(newmthd GoMethod, mapper methodMapper) {
 	if mmap.methods == nil {
 		mmap.methods = make(map[string][]GoMethod)
 	}
@@ -30,7 +30,7 @@ func (mmap *MethodMap) AddMethod(newmthd GoMethod, mapper MethodMapper) {
 	}
 }
 
-func (mmap *MethodMap) FindMethod(name string,
+func (mmap *methodMap) FindMethod(name string,
 	args *GoMethodArguments) GoMethod {
 	for key, mlist := range mmap.methods {
 		if key == name {
@@ -45,11 +45,11 @@ func (mmap *MethodMap) FindMethod(name string,
 	return nil
 }
 
-func (mmap *MethodMap) Length() int {
+func (mmap *methodMap) Length() int {
 	return len(mmap.methods)
 }
 
-func (mmap *MethodMap) MethodList(name string) []GoMethod {
+func (mmap *methodMap) MethodList(name string) []GoMethod {
 	if mmap.methods != nil {
 		if mthd, ok := mmap.methods[name]; ok {
 			return mthd
@@ -59,7 +59,7 @@ func (mmap *MethodMap) MethodList(name string) []GoMethod {
 	return nil
 }
 
-func (mmap *MethodMap) renumberDuplicateMethods(gp *GoProgram) {
+func (mmap *methodMap) renumberDuplicateMethods(gp *GoProgram) {
 	for _, mlist := range mmap.methods {
 		if len(mlist) > 1 {
 			n := 0
@@ -73,7 +73,7 @@ func (mmap *MethodMap) renumberDuplicateMethods(gp *GoProgram) {
 	}
 }
 
-func (mmap *MethodMap) SortedKeys() []string {
+func (mmap *methodMap) SortedKeys() []string {
 	if mmap.methods == nil {
 		return nil
 	}
@@ -90,7 +90,7 @@ func (mmap *MethodMap) SortedKeys() []string {
 	return flds
 }
 
-func (mmap *MethodMap) WriteString(out io.Writer, verbose bool) {
+func (mmap *methodMap) WriteString(out io.Writer, verbose bool) {
 	io.WriteString(out, "|")
 	if !verbose {
 		io.WriteString(out, fmt.Sprintf("%d methods", len(mmap.methods)))
@@ -109,15 +109,16 @@ func (mmap *MethodMap) WriteString(out io.Writer, verbose bool) {
 	}
 }
 
-type ClassMethodMap struct {
-	MethodMap
+type classMethodMap struct {
+	methodMap
 }
 
-func NewClassMethodMap() *ClassMethodMap {
-	return &ClassMethodMap{MethodMap{}}
+// create a map of class names to objects
+func NewClassMethodMap() *classMethodMap {
+	return &classMethodMap{methodMap{}}
 }
 
-func (cmm *ClassMethodMap) FixDuplicate(mlist []GoMethod, newmthd GoMethod) bool {
+func (cmm *classMethodMap) FixDuplicate(mlist []GoMethod, newmthd GoMethod) bool {
 	fixed := false
 	if gm, is_gm := newmthd.(*GoClassMethod); !is_gm {
 		if _, is_ref := newmthd.(*GoMethodReference); !is_ref {
@@ -138,15 +139,16 @@ func (cmm *ClassMethodMap) FixDuplicate(mlist []GoMethod, newmthd GoMethod) bool
 	return fixed
 }
 
-type InterfaceMethodMap struct {
-	MethodMap
+type interfaceMethodMap struct {
+	methodMap
 }
 
-func NewInterfaceMethodMap() *InterfaceMethodMap {
-	return &InterfaceMethodMap{MethodMap{}}
+// create a map of interface names to objects
+func NewInterfaceMethodMap() *interfaceMethodMap {
+	return &interfaceMethodMap{methodMap{}}
 }
 
-func (cmm *InterfaceMethodMap) FixDuplicate(mlist []GoMethod, newmthd GoMethod) bool {
+func (cmm *interfaceMethodMap) FixDuplicate(mlist []GoMethod, newmthd GoMethod) bool {
 	fixed := false
 	if gm, is_gm := newmthd.(*GoIfaceMethod); !is_gm {
 		if _, is_ref := newmthd.(*GoMethodReference); !is_ref {
