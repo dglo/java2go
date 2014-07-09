@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/dglo/java2go/grammar"
 )
 
 // list of types which inherit from AbstractList
@@ -227,7 +229,7 @@ func TransformThisArg(parent GoObject, prog *GoProgram, cls GoClass,
 	for i, arg := range mref.args.args {
 		var kwd *GoKeyword
 		if kwd, ok = arg.(*GoKeyword); ok {
-			if kwd.token == THIS {
+			if kwd.token == grammar.THIS {
 				mref.args.args[i] =
 					NewFakeVar(prog.Receiver(cls.Name()), nil, 0)
 			}

@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/dglo/java2go/dumper"
+	"github.com/dglo/java2go/grammar"
 )
 
 // assign new struct to receiver
@@ -25,11 +26,11 @@ func assignNewStruct(rvar GoVar, class GoMethodOwner) *GoAssign {
 	return &GoAssign{govar: rvar, tok: token.ASSIGN, rhs: rhs}
 }
 
-func fixName(name string, modifiers *JModifiers) string {
+func fixName(name string, modifiers *grammar.JModifiers) string {
 	if name != "" && modifiers != nil {
-		if modifiers.IsSet(modPrivate) {
+		if modifiers.IsSet(grammar.ModPrivate) {
 			return strings.ToLower(name[:1]) + name[1:]
-		} else if modifiers.IsSet(modPublic) {
+		} else if modifiers.IsSet(grammar.ModPublic) {
 			return strings.ToUpper(name[:1]) + name[1:]
 		}
 	}
@@ -53,7 +54,7 @@ type FakeVar struct {
 	dims int
 }
 
-func NewFakeVar(name string, type_args []*JTypeArgument, dims int) *FakeVar {
+func NewFakeVar(name string, type_args []*grammar.JTypeArgument, dims int) *FakeVar {
 	if type_args != nil && len(type_args) > 0 {
 		log.Printf("//ERR// Not handling type_args in %v\n", name)
 	}
@@ -774,7 +775,7 @@ type GoClass interface {
 	Decls() []ast.Decl
 	finalize(gp *GoProgram)
 	FindMethod(name string, args *GoMethodArguments) GoMethod
-	findVariable(typename *JTypeName) GoVar
+	findVariable(typename *grammar.JTypeName) GoVar
 	IsNil() bool
 	IsReference() bool
 	Name() string
@@ -938,7 +939,7 @@ func (cls *GoClassDefinition) AddMethod(newmthd GoMethod) {
 	cls.methods.AddMethod(newmthd, cls.methods)
 }
 
-func (cls *GoClassDefinition) AddNewMethod(gs *GoState, mth *JMethodDecl) {
+func (cls *GoClassDefinition) AddNewMethod(gs *GoState, mth *grammar.JMethodDecl) {
 	cls.AddMethod(NewGoClassMethod(cls, gs, mth))
 }
 
@@ -1023,7 +1024,7 @@ func (cls *GoClassDefinition) FindMethod(name string,
 	return cls.methods.FindMethod(name, args)
 }
 
-func (cls *GoClassDefinition) findVariable(typename *JTypeName) GoVar {
+func (cls *GoClassDefinition) findVariable(typename *grammar.JTypeName) GoVar {
 	for _, c := range cls.constants {
 		if c.name == typename.String() {
 			return c
@@ -1281,20 +1282,20 @@ type GoClassMethod struct {
 	body *GoBlock
 }
 
-func NewGoClassMethod(class GoMethodOwner, gs *GoState, jmth *JMethodDecl) *GoClassMethod {
+func NewGoClassMethod(class GoMethodOwner, gs *GoState, jmth *grammar.JMethodDecl) *GoClassMethod {
 	var mtype methodType
-	if jmth.modifiers.HasAnnotation("Test") {
+	if jmth.Modifiers.HasAnnotation("Test") {
 		mtype = mt_test
-	} else if jmth.name == class.Name() {
+	} else if jmth.Name == class.Name() {
 		mtype = mt_constructor
-	} else if jmth.modifiers.IsSet(modStatic) {
+	} else if jmth.Modifiers.IsSet(grammar.ModStatic) {
 		mtype = mt_static
 	} else {
 		mtype = mt_method
 	}
 
-	name := jmth.name
-	goname := fixName(jmth.name, jmth.modifiers)
+	name := jmth.Name
+	goname := fixName(jmth.Name, jmth.Modifiers)
 	if mtype == mt_constructor {
 		name = "New" + name
 		goname = "New" + goname
@@ -1307,37 +1308,39 @@ func NewGoClassMethod(class GoMethodOwner, gs *GoState, jmth *JMethodDecl) *GoCl
 
 	var params []GoVar
 	if mtype == mt_test {
-		if jmth.formal_params != nil && len(jmth.formal_params) > 0 {
+		if jmth.FormalParams != nil && len(jmth.FormalParams) > 0 {
 			if gs.Program().verbose {
 				log.Printf("//ERR// Test method %s.%s should not have %d params\n",
-					class.Name(), jmth.name, len(jmth.formal_params))
+					class.Name(), jmth.Name, len(jmth.FormalParams))
 			} else {
 				log.Printf("//ERR// Ignoring test method params\n")
 			}
 		}
-	} else if jmth.formal_params != nil && len(jmth.formal_params) > 0 {
-		params = make([]GoVar, len(jmth.formal_params))
+	} else if jmth.FormalParams != nil && len(jmth.FormalParams) > 0 {
+		params = make([]GoVar, len(jmth.FormalParams))
 
-		for i, fp := range jmth.formal_params {
-			if fp.typespec != nil {
-				if fp.dims != 0 {
+		for i, fp := range jmth.FormalParams {
+			if fp.TypeSpec != nil {
+				if fp.Dims != 0 {
 					if gs.Program().verbose {
 						log.Printf("//ERR// Ignoring %s dims=%d for %s.%s\n",
-							fp.name, fp.dims, class.Name(), jmth.name)
+							fp.Name, fp.Dims, class.Name(), jmth.Name)
 					} else {
 						log.Printf("//ERR// Ignoring mthd param dims\n")
 					}
-				} else if fp.dotdotdot {
+				} else if fp.DotDotDot {
 					if gs.Program().verbose {
-						log.Printf("//ERR// Ignoring %s dotdotdot=true for %s.%s\n",
-							fp.name, class.Name(), jmth.name)
+						log.Printf("//ERR// Ignoring %s DotDotDot=true for %s.%s\n",
+							fp.Name, class.Name(), jmth.Name)
 					} else {
 						log.Printf("//ERR// Ignoring mthd param...\n")
 					}
 				}
 
-				govar := gs2.addVariable(fp.name, fp.modifiers, fp.dims,
-					fp.typespec, false)
+				govar := gs2.addVariable(fp.Name, fp.Modifiers, fp.Dims,
+					fp.TypeSpec, false)
+
+
 
 				params[i] = govar
 			}
@@ -1350,13 +1353,13 @@ func NewGoClassMethod(class GoMethodOwner, gs *GoState, jmth *JMethodDecl) *GoCl
 	}
 
 	var typedata *TypeData
-	if jmth.typespec != nil &&
+	if jmth.TypeSpec != nil &&
 		(mtype == mt_method || mtype == mt_static) {
-		typedata = gs.Program().createTypeData(jmth.typespec.name,
-			jmth.typespec.type_args, jmth.typespec.dims)
+		typedata = gs.Program().createTypeData(jmth.TypeSpec.Name,
+			jmth.TypeSpec.TypeArgs, jmth.TypeSpec.Dims)
 	}
 
-	body := analyzeBlock(gs2, class, jmth.block)
+	body := analyzeBlock(gs2, class, jmth.Block)
 
 	mthd := &GoClassMethod{class: class, name: name, goname: goname,
 		typedata: typedata, rcvr: rvar, method_type: mtype, params: params,
@@ -1663,7 +1666,7 @@ func (cref *GoClassReference) FindMethod(name string,
 	return cref.parent.FindMethod(name, args)
 }
 
-func (cref *GoClassReference) findVariable(typename *JTypeName) GoVar {
+func (cref *GoClassReference) findVariable(typename *grammar.JTypeName) GoVar {
 	panic("Unimplemented")
 }
 
@@ -2062,7 +2065,7 @@ func (gfc *GoFakeClass) FindMethod(name string,
 	return mthd
 }
 
-func (gfc *GoFakeClass) findVariable(typename *JTypeName) GoVar {
+func (gfc *GoFakeClass) findVariable(typename *grammar.JTypeName) GoVar {
 	return nil
 }
 
@@ -2623,31 +2626,31 @@ type GoIfaceMethod struct {
 }
 
 func NewGoInterfaceMethod(gp *GoProgram, iface_name string,
-	imth *JInterfaceMethodDecl) *GoIfaceMethod {
+	imth *grammar.JInterfaceMethodDecl) *GoIfaceMethod {
 	gm := &GoIfaceMethod{}
 
-	gm.name = imth.name
-	gm.goname = strings.ToUpper(imth.name[:1]) + imth.name[1:]
+	gm.name = imth.Name
+	gm.goname = strings.ToUpper(imth.Name[:1]) + imth.Name[1:]
 
 	var gs *GoState
 
-	if imth.formal_params != nil && len(imth.formal_params) > 0 {
-		gm.param_list = make([]GoVar, len(imth.formal_params))
-		for i, fp := range imth.formal_params {
-			if fp.typespec != nil {
-				if fp.dims != 0 {
+	if imth.FormalParams != nil && len(imth.FormalParams) > 0 {
+		gm.param_list = make([]GoVar, len(imth.FormalParams))
+		for i, fp := range imth.FormalParams {
+			if fp.TypeSpec != nil {
+				if fp.Dims != 0 {
 					if gp.verbose {
 						log.Printf("//ERR// Ignoring %s dims=%d for %s.%s\n",
-							fp.name, fp.dims, iface_name, imth.name)
+							fp.Name, fp.Dims, iface_name, imth.Name)
 					} else {
 						log.Printf("//ERR// Ignoring non-zero interface dims\n")
 					}
-				} else if fp.dotdotdot {
+				} else if fp.DotDotDot {
 					if gp.verbose {
-						log.Printf("//ERR// Ignoring %s dotdotdot=true for %s.%s\n",
-							fp.name, iface_name, imth.name)
+						log.Printf("//ERR// Ignoring %s DotDotDot=true for %s.%s\n",
+							fp.Name, iface_name, imth.Name)
 					} else {
-						log.Printf("//ERR// Ignoring interface dotdotdot\n")
+						log.Printf("//ERR// Ignoring interface DotDotDot\n")
 					}
 				}
 
@@ -2655,17 +2658,17 @@ func NewGoInterfaceMethod(gp *GoProgram, iface_name string,
 					gs = &GoState{program: gp}
 				}
 
-				govar := gs.addVariable(fp.name, fp.modifiers, fp.dims,
-					fp.typespec, false)
+				govar := gs.addVariable(fp.Name, fp.Modifiers, fp.Dims,
+					fp.TypeSpec, false)
 
 				gm.param_list[i] = govar
 			}
 		}
 	}
 
-	if imth.typespec != nil {
-		gm.result_type = gp.createTypeData(imth.typespec.name,
-			imth.typespec.type_args, imth.typespec.dims)
+	if imth.TypeSpec != nil {
+		gm.result_type = gp.createTypeData(imth.TypeSpec.Name,
+			imth.TypeSpec.TypeArgs, imth.TypeSpec.Dims)
 	}
 
 	return gm
@@ -3006,9 +3009,9 @@ type GoInterface interface {
 	Constants() []ast.Decl
 	Decl() ast.Decl
 	finalize(*GoProgram)
-	findVariable(*JTypeName) GoVar
+	findVariable(*grammar.JTypeName) GoVar
 	IsInterface() bool
-	Matches(*JTypeName) bool
+	Matches(*grammar.JTypeName) bool
 	Name() string
 	String() string
 	WriteString(io.Writer, bool)
@@ -3089,7 +3092,7 @@ func (gi *GoInterfaceDefinition) finalize(gp *GoProgram) {
 	gi.renumberDuplicateMethods(gp)
 }
 
-func (gi *GoInterfaceDefinition) findVariable(name *JTypeName) GoVar {
+func (gi *GoInterfaceDefinition) findVariable(name *grammar.JTypeName) GoVar {
 	for _, c := range gi.constants {
 		if c.name == name.String() {
 			return c
@@ -3112,7 +3115,7 @@ func (gi *GoInterfaceDefinition) IsNil() bool {
 	return false
 }
 
-func (gi *GoInterfaceDefinition) Matches(name *JTypeName) bool {
+func (gi *GoInterfaceDefinition) Matches(name *grammar.JTypeName) bool {
 	return name.String() == gi.name || name.LastType() == gi.name
 }
 
@@ -3161,7 +3164,7 @@ func (gi *GoInterfaceDefinition) WriteString(out io.Writer, verbose bool) {
 }
 
 type GoInterfaceReference struct {
-	name *JTypeName
+	name *grammar.JTypeName
 	gp *GoProgram
 	realiface *GoInterfaceDefinition
 }
@@ -3195,7 +3198,7 @@ func (ref *GoInterfaceReference) finalize(gp *GoProgram) {
 	}
 }
 
-func (ref *GoInterfaceReference) findVariable(name *JTypeName) GoVar {
+func (ref *GoInterfaceReference) findVariable(name *grammar.JTypeName) GoVar {
 	if ref.realiface != nil {
 		return ref.realiface.findVariable(name)
 	}
@@ -3207,7 +3210,7 @@ func (ref *GoInterfaceReference) IsInterface() bool {
 	return true
 }
 
-func (ref *GoInterfaceReference) Matches(name *JTypeName) bool {
+func (ref *GoInterfaceReference) Matches(name *grammar.JTypeName) bool {
 	return name.LastType() == ref.name.LastType() ||
 		name.String() == ref.name.String()
 }
@@ -3237,15 +3240,7 @@ type GoJumpToLabel struct {
 	label string
 }
 
-func NewJumpToLabel(token int, label string) *GoJumpToLabel {
-	var is_continue bool
-	if token == CONTINUE {
-		is_continue = true
-	} else if token != BREAK {
-		panic(fmt.Sprintf("JumpToLabel token #%d is not BREAK(#%d)" +
-			" or CONTINUE(#%d)", token, BREAK, CONTINUE))
-	}
-
+func NewGoJumpToLabel(label string, is_continue bool) *GoJumpToLabel {
 	return &GoJumpToLabel{is_continue: is_continue, label: label}
 }
 
@@ -3294,7 +3289,7 @@ type GoKeyword struct {
 
 func NewGoKeyword(token int, name string) *GoKeyword {
 	if name == "" {
-		reportError("Keyword name cannot be empty")
+		grammar.ReportError("Keyword name cannot be empty")
 	}
 
 	return &GoKeyword{token: token, name: name}
@@ -3329,7 +3324,7 @@ func (key *GoKeyword) RunTransform(xform TransformFunc, prog *GoProgram, cls GoC
 }
 
 func (key *GoKeyword) String() string {
-	return "GoKeyword[" + JulyTokname(key.token) + "|" + key.name + "]"
+	return "GoKeyword[" + grammar.JulyTokname(key.token) + "|" + key.name + "]"
 }
 
 func (key *GoKeyword) VarType() *TypeData {
@@ -3388,7 +3383,7 @@ type GoLiteral struct {
 
 func NewGoLiteral(text string) *GoLiteral {
 	if text == "" {
-		reportError("Literal text cannot be empty")
+		grammar.ReportError("Literal text cannot be empty")
 	}
 
 	return &GoLiteral{text: text}
@@ -4008,7 +4003,7 @@ type GoMethodArguments struct {
 }
 
 func NewGoMethodArguments(gs *GoState, owner GoMethodOwner,
-	args []JObject) *GoMethodArguments {
+	args []grammar.JObject) *GoMethodArguments {
 	ma := &GoMethodArguments{}
 	if args != nil && len(args) > 0 {
 		ma.args = make([]GoExpr, len(args))
@@ -4299,10 +4294,10 @@ type GoObjectDotName struct {
 	ref GoVar
 }
 
-func NewObjectDotName(odn *JObjectDotName, obj GoExpr, gs *GoState) *GoObjectDotName {
-	govar := gs.findOrFakeVariable(odn.name, "objdotname")
+func NewObjectDotName(odn *grammar.JObjectDotName, obj GoExpr, gs *GoState) *GoObjectDotName {
+	govar := gs.findOrFakeVariable(odn.Name, "objdotname")
 
-	log.Printf("//ERR// Inadequately wrapping odnobj %T\n", odn.obj)
+	log.Printf("//ERR// Inadequately wrapping odnobj %T\n", odn.Obj)
 	return &GoObjectDotName{obj: obj, ref: govar}
 }
 
@@ -4405,7 +4400,7 @@ type GoPrimitiveType struct {
 
 func NewGoPrimitiveType(name string, dims int) *GoPrimitiveType {
 	if name == "" {
-		reportError("PrimitiveType name cannot be empty")
+		grammar.ReportError("PrimitiveType name cannot be empty")
 	}
 
 	return &GoPrimitiveType{typedata: NewTypeDataPrimitive(name, dims)}
@@ -4465,29 +4460,29 @@ func (gp *GoProgram) addClass(cls GoClass) {
 	gp.classes[key] = cls
 }
 
-func (gp *GoProgram) addEnum(enm *JEnumDecl) {
-	if enm.interfaces != nil && len(enm.interfaces) > 0 {
+func (gp *GoProgram) addEnum(enm *grammar.JEnumDecl) {
+	if enm.Interfaces != nil && len(enm.Interfaces) > 0 {
 		if gp.verbose {
 			log.Printf("//ERR// Ignoring enum %s %d interfaces in %s\n",
-				enm.name, len(enm.interfaces), gp.name)
+				enm.Name, len(enm.Interfaces), gp.name)
 		} else {
 			log.Printf("//ERR// Ignoring enum interfaces\n")
 		}
 	}
 
 	var constants []*GoEnumConstant
-	if enm.constants != nil && len(enm.constants) > 0 {
-		constants = make([]*GoEnumConstant, len(enm.constants))
-		for i, v := range enm.constants {
-			constants[i] = gp.analyzeEnumConstant(enm.name, v)
+	if enm.Constants != nil && len(enm.Constants) > 0 {
+		constants = make([]*GoEnumConstant, len(enm.Constants))
+		for i, v := range enm.Constants {
+			constants[i] = gp.analyzeEnumConstant(enm.Name, v)
 		}
 	}
 
-	if enm.bodydecl != nil && len(enm.bodydecl) > 0 {
+	if enm.BodyDecl != nil && len(enm.BodyDecl) > 0 {
 		log.Printf("//ERR// Ignoring enum body\n")
 	}
 
-	enum := &GoEnumDefinition{name: enm.name, constants: constants}
+	enum := &GoEnumDefinition{name: enm.Name, constants: constants}
 
 	if gp.enums == nil {
 		gp.enums = make([]*GoEnumDefinition, 0)
@@ -4527,16 +4522,16 @@ func (gp *GoProgram) addImport(pkgname string, clsname string) {
 	}
 }
 
-func (gp *GoProgram) addInterface(iface *JInterfaceDecl) {
+func (gp *GoProgram) addInterface(iface *grammar.JInterfaceDecl) {
 	if gp.interfaces == nil {
 		gp.interfaces = make([]GoInterface, 0)
 	}
 
-	gi := NewGoInterfaceDefinition(iface.name.String())
+	gi := NewGoInterfaceDefinition(iface.Name.String())
 
 	added := false
 	for i, x := range gp.interfaces {
-		if x.Matches(iface.name) {
+		if x.Matches(iface.Name) {
 			if _, ok := x.(*GoInterfaceDefinition); !ok {
 				gp.interfaces[i] = gi
 				added = true
@@ -4547,37 +4542,37 @@ func (gp *GoProgram) addInterface(iface *JInterfaceDecl) {
 		gp.interfaces = append(gp.interfaces, gi)
 	}
 
-	for _, jobj := range iface.body {
+	for _, jobj := range iface.Body {
 		switch j := jobj.(type) {
-		case *JConstantDecl:
+		case *grammar.JConstantDecl:
 			analyzeConstant(&GoState{program: gp}, gi, j)
-		case *JClassDecl:
+		case *grammar.JClassDecl:
 			if gp.verbose {
 				log.Printf("//ERR// Not adding %T to interface %s\n", j, gi.name)
 			} else {
 				log.Printf("//ERR// Not adding %T to interface\n", j)
 			}
-		case *JEnumDecl:
+		case *grammar.JEnumDecl:
 			if gp.verbose {
 				log.Printf("//ERR// Not adding %T to interface %s\n", j, gi.name)
 			} else {
 				log.Printf("//ERR// Not adding %T to interface\n", j)
 			}
-		case *JInterfaceDecl:
+		case *grammar.JInterfaceDecl:
 			if gp.verbose {
 				log.Printf("//ERR// Not adding %T to interface %s\n", j, gi.name)
 			} else {
 				log.Printf("//ERR// Not adding %T to interface\n", j)
 			}
-		case *JInterfaceMethodDecl:
+		case *grammar.JInterfaceMethodDecl:
 			gi.AddMethod(NewGoInterfaceMethod(gp, gi.name, j))
 		default:
-			reportCastError("InterfaceDecl", jobj)
+			grammar.ReportCastError("InterfaceDecl", jobj)
 		}
 	}
 }
 
-func (gp *GoProgram) addInterfaceReference(name *JTypeName) *GoInterfaceReference {
+func (gp *GoProgram) addInterfaceReference(name *grammar.JTypeName) *GoInterfaceReference {
 	iface := &GoInterfaceReference{name: name, gp: gp}
 
 	if gp.interfaces == nil {
@@ -4588,7 +4583,7 @@ func (gp *GoProgram) addInterfaceReference(name *JTypeName) *GoInterfaceReferenc
 	return iface
 }
 
-func (gp *GoProgram) Analyze(pgm *JProgramFile) {
+func (gp *GoProgram) Analyze(pgm *grammar.JProgramFile) {
 	gp.setPackage(pgm)
 
 	gp.analyzeImports(pgm)
@@ -4598,26 +4593,26 @@ func (gp *GoProgram) Analyze(pgm *JProgramFile) {
 	gp.finalize()
 }
 
-func (gp *GoProgram) analyzeCode(pgm *JProgramFile) {
-	if pgm == nil || pgm.type_decls == nil || len(pgm.type_decls) == 0 {
+func (gp *GoProgram) analyzeCode(pgm *grammar.JProgramFile) {
+	if pgm == nil || pgm.TypeDecls == nil || len(pgm.TypeDecls) == 0 {
 		return
 	}
 
 	var gs *GoState
 
-	for _, tobj := range pgm.type_decls {
+	for _, tobj := range pgm.TypeDecls {
 		switch t := tobj.(type) {
-		case *JClassDecl:
+		case *grammar.JClassDecl:
 			if gs == nil {
 				gs = &GoState{program: gp}
 			}
 			gs.addClassDecl(nil, t)
-		case *JEnumDecl:
+		case *grammar.JEnumDecl:
 			gp.addEnum(t)
-		case *JInterfaceDecl:
+		case *grammar.JInterfaceDecl:
 			gp.addInterface(t)
-		case *JUnimplemented:
-			log.Printf("//ERR// Ignoring unimplemented object %s\n", t.typestr)
+		case *grammar.JUnimplemented:
+			log.Printf("//ERR// Ignoring unimplemented object %s\n", t.TypeStr)
 		default:
 			log.Printf("//ERR// Ignoring unknown type_decl %T\n", tobj)
 		}
@@ -4645,61 +4640,61 @@ func (gp *GoProgram) analyzeCode(pgm *JProgramFile) {
 	}
 }
 
-func (gp *GoProgram) analyzeEnumConstant(name string, con *JEnumConstant) *GoEnumConstant {
-	if con.annotations != nil && len(con.annotations) > 0 {
+func (gp *GoProgram) analyzeEnumConstant(name string, con *grammar.JEnumConstant) *GoEnumConstant {
+	if con.Annotations != nil && len(con.Annotations) > 0 {
 		if gp.verbose {
 			log.Printf("//ERR// ignoring enumconst %v.%v annotations\n",
-				name, con.name)
+				name, con.Name)
 		} else {
 			log.Printf("//ERR// ignoring enumconst annotations\n")
 		}
 	}
 
-	if con.arglist != nil && len(con.arglist) > 0 {
+	if con.ArgList != nil && len(con.ArgList) > 0 {
 		if gp.verbose {
 			log.Printf("//ERR// ignoring enumconst %v.%v arguments\n",
-				name, con.name)
+				name, con.Name)
 		} else {
 			log.Printf("//ERR// ignoring enumconst arguments\n")
 		}
 	}
 
-	if con.body != nil && len(con.body) > 0 {
+	if con.Body != nil && len(con.Body) > 0 {
 		if gp.verbose {
-			log.Printf("//ERR// ignoring enumconst %v.%v body\n", name, con.name)
+			log.Printf("//ERR// ignoring enumconst %v.%v body\n", name, con.Name)
 		} else {
 			log.Printf("//ERR// ignoring enumconst body\n")
 		}
 	}
 
-	return &GoEnumConstant{name: con.name}
+	return &GoEnumConstant{name: con.Name}
 }
 
-func (gp *GoProgram) analyzeImports(pgm *JProgramFile) {
-	if pgm == nil || pgm.imports == nil {
+func (gp *GoProgram) analyzeImports(pgm *grammar.JProgramFile) {
+	if pgm == nil || pgm.Imports == nil {
 		return
 	}
 
-	for _, iobj := range pgm.imports {
-		if jimp, ok := iobj.(*JImportStmt); !ok {
-			reportCastError("JImportStmt", iobj)
+	for _, iobj := range pgm.Imports {
+		if jimp, ok := iobj.(*grammar.JImportStmt); !ok {
+			grammar.ReportCastError("JImportStmt", iobj)
 		} else {
-			pkgstr := jimp.name.PackageString()
+			pkgstr := jimp.Name.PackageString()
 			iname := gp.config.FindPackage(pkgstr)
 			if iname == "" {
 				gp.addClass(&GoFakeClass{pkg: pkgstr,
-					name: jimp.name.LastType()})
-				log.Printf("Faking import for %v\n", jimp.name.String())
+					name: jimp.Name.LastType()})
+				log.Printf("Faking import for %v\n", jimp.Name.String())
 				continue
 			}
 
-			gp.addImport(iname, jimp.name.LastType())
+			gp.addImport(iname, jimp.Name.LastType())
 		}
 	}
 }
 
-func (gp *GoProgram) createTypeData(typename *JTypeName,
-	type_args []*JTypeArgument, dims int) *TypeData {
+func (gp *GoProgram) createTypeData(typename *grammar.JTypeName,
+	type_args []*grammar.JTypeArgument, dims int) *TypeData {
 
 	typestr := typename.String()
 	if typename.IsPrimitive() || typestr == "String" {
@@ -4860,7 +4855,7 @@ func (gp *GoProgram) findClass(name string) GoClass {
 	return nil
 }
 
-func (gp *GoProgram) findInterface(name *JTypeName) GoInterface {
+func (gp *GoProgram) findInterface(name *grammar.JTypeName) GoInterface {
 	if gp.interfaces != nil {
 		for _, iface := range gp.interfaces {
 			if iface.Matches(name) || iface.Matches(name) {
@@ -4938,11 +4933,11 @@ func (gp *GoProgram) RunTransform(xform TransformFunc, prog *GoProgram, cls GoCl
 	return xform(parent, prog, cls, gp)
 }
 
-func (gp *GoProgram) setPackage(pgm *JProgramFile) {
-	if pgm != nil && pgm.pkg != nil {
-		gp.pkgname = gp.config.FindPackage(pgm.pkg.name.String())
+func (gp *GoProgram) setPackage(pgm *grammar.JProgramFile) {
+	if pgm != nil && pgm.Pkg != nil {
+		gp.pkgname = gp.config.FindPackage(pgm.Pkg.Name.String())
 		if gp.pkgname == "" {
-			gp.pkgname = pgm.pkg.name.String()
+			gp.pkgname = pgm.Pkg.Name.String()
 		}
 	}
 	if gp.pkgname == "" {
@@ -5239,27 +5234,27 @@ func (gs *GoState) addClass(nref GoClass) {
 	}
 }
 
-func (gs *GoState) addClassDecl(parent GoMethodOwner, jcls *JClassDecl) {
-	cls := NewGoClassDefinition(gs.Program(), parent, jcls.name)
+func (gs *GoState) addClassDecl(parent GoMethodOwner, jcls *grammar.JClassDecl) {
+	cls := NewGoClassDefinition(gs.Program(), parent, jcls.Name)
 	gs.addClass(cls)
 
-	if jcls.extends != nil {
-		if jcls.extends.dims != 0 {
+	if jcls.Extends != nil {
+		if jcls.Extends.Dims != 0 {
 			log.Printf("Class %v cannot extend array %v with dim=%d",
-				jcls.name, jcls.extends.name, jcls.extends.dims)
-			jcls.extends.dims = 0
+				jcls.Name, jcls.Extends.Name, jcls.Extends.Dims)
+			jcls.Extends.Dims = 0
 		}
 
-		if jcls.extends.type_args != nil && len(jcls.extends.type_args) > 0 {
+		if jcls.Extends.TypeArgs != nil && len(jcls.Extends.TypeArgs) > 0 {
 			if gs.Program().verbose {
 				log.Printf("//ERR// Not handling %v type_args in extended" +
-					" class %v\n", jcls.extends.name, jcls.name)
+					" class %v\n", jcls.Extends.Name, jcls.Name)
 			} else {
 				log.Printf("//ERR// Not handling type_args in extended class\n")
 			}
 		}
 
-		extname := jcls.extends.name.LastType()
+		extname := jcls.Extends.Name.LastType()
 		cls.super = gs.Program().findClass(extname)
 		if cls.super == nil {
 			cls.super = &GoFakeClass{name: extname}
@@ -5267,9 +5262,9 @@ func (gs *GoState) addClassDecl(parent GoMethodOwner, jcls *JClassDecl) {
 		}
 	}
 
-	if jcls.interfaces != nil && len(jcls.interfaces) > 0 {
-		ifaces := make([]GoInterface, len(jcls.interfaces))
-		for i, iname := range jcls.interfaces {
+	if jcls.Interfaces != nil && len(jcls.Interfaces) > 0 {
+		ifaces := make([]GoInterface, len(jcls.Interfaces))
+		for i, iname := range jcls.Interfaces {
 			iface := gs.Program().findInterface(iname)
 			if iface == nil {
 				iface = gs.Program().addInterfaceReference(iname)
@@ -5282,34 +5277,34 @@ func (gs *GoState) addClassDecl(parent GoMethodOwner, jcls *JClassDecl) {
 	gs2 := NewGoState(gs)
 	gs2.class = cls
 
-	for _, jobj := range jcls.body {
+	for _, jobj := range jcls.Body {
 		switch j := jobj.(type) {
-		case *JClassBody:
+		case *grammar.JClassBody:
 			analyzeClassBody(gs2, cls, j)
-		case *JBlock:
+		case *grammar.JBlock:
 			blk := analyzeBlock(gs2, cls, j)
 			if blk != nil {
 				m := &GoClassMethod{class: cls, name: "init", goname: "init",
 					rcvr: nil, method_type: mt_static, body: blk}
 				cls.AddMethod(m)
 			}
-		case *GoEmpty:
+		case *grammar.JEmpty:
 			; // do nothing
 		default:
-			reportCastError("JClassDecl", jobj)
+			grammar.ReportCastError("JClassDecl", jobj)
 		}
 	}
 }
 
-func (gs *GoState) addVariable(name string, modifiers *JModifiers, dims int,
-	typespec *JReferenceType, class_field bool) GoVar {
+func (gs *GoState) addVariable(name string, modifiers *grammar.JModifiers, dims int,
+	typespec *grammar.JReferenceType, class_field bool) GoVar {
 	goname := fixName(name, modifiers)
 
 	var vartype *TypeData
 	if typespec != nil {
 		// "String[] a[]" creates a 2D array of Strings
-		vartype = gs.Program().createTypeData(typespec.name,
-			typespec.type_args, typespec.dims + dims)
+		vartype = gs.Program().createTypeData(typespec.Name,
+			typespec.TypeArgs, typespec.Dims + dims)
 	}
 
 	if gs.vars == nil {
@@ -5328,12 +5323,12 @@ func (gs *GoState) addVariable(name string, modifiers *JModifiers, dims int,
 
 	var is_static bool
 	if modifiers != nil {
-		is_static = modifiers.IsSet(modStatic)
+		is_static = modifiers.IsSet(grammar.ModStatic)
 	}
 
 	var is_final bool
 	if modifiers != nil {
-		is_final = modifiers.IsSet(modFinal)
+		is_final = modifiers.IsSet(grammar.ModFinal)
 	}
 
 	govar := &GoVarData{rcvr: rcvr, name: name, goname: goname,
@@ -5344,12 +5339,8 @@ func (gs *GoState) addVariable(name string, modifiers *JModifiers, dims int,
 	return govar
 }
 
-func (gs *GoState) addVariableDecl(vd *JVariableDecl, class_field bool) GoVar {
-	if vd.dims != 0 {
-		log.Printf("//ERR// ignoring vardecl dims=%d\n", vd.dims)
-	}
-
-	return gs.addVariable(vd.name, vd.modifiers, vd.dims, vd.typespec,
+func (gs *GoState) addVariableDecl(vd *grammar.JVariableDecl, class_field bool) GoVar {
+	return gs.addVariable(vd.Name, vd.Modifiers, vd.Dims, vd.TypeSpec,
 		class_field)
 }
 
@@ -5408,7 +5399,7 @@ func (gs *GoState) findClass(parent GoMethodOwner, name string) GoClass {
 	return nil
 }
 
-func (gs *GoState) findOrFakeVariable(typename *JTypeName,
+func (gs *GoState) findOrFakeVariable(typename *grammar.JTypeName,
 	origtype string) GoVar {
 	govar := gs.findVariable(typename)
 	if govar != nil {
@@ -5423,7 +5414,7 @@ func (gs *GoState) findOrFakeVariable(typename *JTypeName,
 		0)
 }
 
-func (gs *GoState) findVariable(typename *JTypeName) GoVar {
+func (gs *GoState) findVariable(typename *grammar.JTypeName) GoVar {
 	if !typename.IsDotted() {
 		val, ok := gs.vars[typename.String()]
 		if ok {

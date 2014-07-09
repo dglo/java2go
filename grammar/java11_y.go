@@ -72,7 +72,7 @@
  *------------------------------------------------------------------
  */
 
-package parser
+package grammar
 
 import __yyfmt__ "fmt"
 
@@ -87,12 +87,12 @@ type tmpVariableId struct {
 	dims int
 }
 
-func reportCastError(expName string, obj interface{}) {
+func ReportCastError(expName string, obj interface{}) {
 	debug.PrintStack()
 	panic(fmt.Sprintf("Expected %s, got %T (%s)", expName, obj, obj))
 }
 
-func reportError(msg string) {
+func ReportError(msg string) {
 	debug.PrintStack()
 	panic(msg)
 }
@@ -105,7 +105,7 @@ func makeFormalParamList(objlist []JObject) []*JFormalParameter {
 	list := make([]*JFormalParameter, len(objlist))
 	for i, obj := range objlist {
 		if elem, ok := obj.(*JFormalParameter); !ok {
-			reportCastError("JFormalParameter", obj)
+			ReportCastError("JFormalParameter", obj)
 		} else {
 			list[i] = elem
 		}
@@ -122,7 +122,7 @@ func makeVarDeclList(objlist []JObject) []*JVariableDecl {
 	list := make([]*JVariableDecl, len(objlist))
 	for i, obj := range objlist {
 		if elem, ok := obj.(*JVariableDecl); !ok {
-			reportCastError("JVariableDecl", obj)
+			ReportCastError("JVariableDecl", obj)
 		} else {
 			list[i] = elem
 		}
@@ -1251,7 +1251,7 @@ Julydefault:
 			}
 
 			if prog, ok := JulyS[Julypt-0].obj.(*JProgramFile); !ok {
-				reportCastError("JProgramFile", JulyS[Julypt-0].obj)
+				ReportCastError("JProgramFile", JulyS[Julypt-0].obj)
 			} else {
 
 				mylex.SetJavaProgram(prog)
@@ -1421,7 +1421,7 @@ Julydefault:
 		//line grammar/java11.y:309
 		{
 			if jtyp, ok := JulyS[Julypt-0].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-0].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = jtyp
 			}
@@ -1440,9 +1440,9 @@ Julydefault:
 		//line grammar/java11.y:330
 		{
 			if jmod, ok := JulyS[Julypt-6].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-6].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-6].obj)
 			} else if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-4].str, JulyS[Julypt-3].objlist, jtyp,
 					JulyS[Julypt-1].namelist, JulyS[Julypt-0].objlist)
@@ -1452,9 +1452,9 @@ Julydefault:
 		//line grammar/java11.y:341
 		{
 			if jmod, ok := JulyS[Julypt-5].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-5].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-5].obj)
 			} else if jtyp, ok := JulyS[Julypt-1].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-1].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-1].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-3].str, JulyS[Julypt-2].objlist, jtyp, nil,
 					JulyS[Julypt-0].objlist)
@@ -1464,7 +1464,7 @@ Julydefault:
 		//line grammar/java11.y:352
 		{
 			if jmod, ok := JulyS[Julypt-5].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-5].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-5].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-3].str, JulyS[Julypt-2].objlist, nil,
 					JulyS[Julypt-1].namelist, JulyS[Julypt-0].objlist)
@@ -1474,7 +1474,7 @@ Julydefault:
 		//line grammar/java11.y:361
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-2].str, JulyS[Julypt-1].objlist, nil, nil,
 					JulyS[Julypt-0].objlist)
@@ -1484,9 +1484,9 @@ Julydefault:
 		//line grammar/java11.y:370
 		{
 			if jmod, ok := JulyS[Julypt-5].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-5].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-5].obj)
 			} else if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-3].str, nil, jtyp, JulyS[Julypt-1].namelist,
 					JulyS[Julypt-0].objlist)
@@ -1496,9 +1496,9 @@ Julydefault:
 		//line grammar/java11.y:381
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else if jtyp, ok := JulyS[Julypt-1].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-1].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-1].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-2].str, nil, jtyp, nil,
 					JulyS[Julypt-0].objlist)
@@ -1508,7 +1508,7 @@ Julydefault:
 		//line grammar/java11.y:392
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-2].str, nil, nil, JulyS[Julypt-1].namelist,
 					JulyS[Julypt-0].objlist)
@@ -1518,7 +1518,7 @@ Julydefault:
 		//line grammar/java11.y:401
 		{
 			if jmod, ok := JulyS[Julypt-3].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-3].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-3].obj)
 			} else {
 				JulyVAL.obj = NewJClassDecl(jmod, JulyS[Julypt-1].str, nil, nil, nil, JulyS[Julypt-0].objlist)
 			}
@@ -1527,9 +1527,9 @@ Julydefault:
 		//line grammar/java11.y:412
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else if jbody, ok := JulyS[Julypt-0].obj.(*JEnumBody); !ok {
-				reportCastError("JEnumBody", JulyS[Julypt-0].obj)
+				ReportCastError("JEnumBody", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJEnumDecl(jmod, JulyS[Julypt-2].str, JulyS[Julypt-1].namelist, jbody)
 			}
@@ -1538,9 +1538,9 @@ Julydefault:
 		//line grammar/java11.y:422
 		{
 			if jmod, ok := JulyS[Julypt-3].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-3].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-3].obj)
 			} else if jbody, ok := JulyS[Julypt-0].obj.(*JEnumBody); !ok {
-				reportCastError("JEnumBody", JulyS[Julypt-0].obj)
+				ReportCastError("JEnumBody", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJEnumDecl(jmod, JulyS[Julypt-1].str, nil, jbody)
 			}
@@ -1549,7 +1549,7 @@ Julydefault:
 		//line grammar/java11.y:435
 		{
 			if jmod, ok := JulyS[Julypt-5].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-5].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-5].obj)
 			} else {
 				JulyVAL.obj = NewJInterfaceDecl(jmod, NewJTypeName(JulyS[Julypt-3].str, false),
 					JulyS[Julypt-2].objlist, JulyS[Julypt-1].namelist, JulyS[Julypt-0].objlist)
@@ -1559,7 +1559,7 @@ Julydefault:
 		//line grammar/java11.y:444
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else {
 				JulyVAL.obj = NewJInterfaceDecl(jmod, NewJTypeName(JulyS[Julypt-2].str, false),
 					JulyS[Julypt-1].objlist, nil, JulyS[Julypt-0].objlist)
@@ -1569,7 +1569,7 @@ Julydefault:
 		//line grammar/java11.y:453
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else {
 				JulyVAL.obj = NewJInterfaceDecl(jmod, NewJTypeName(JulyS[Julypt-2].str, false),
 					nil, JulyS[Julypt-1].namelist, JulyS[Julypt-0].objlist)
@@ -1579,7 +1579,7 @@ Julydefault:
 		//line grammar/java11.y:462
 		{
 			if jmod, ok := JulyS[Julypt-3].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-3].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-3].obj)
 			} else {
 				JulyVAL.obj = NewJInterfaceDecl(jmod, NewJTypeName(JulyS[Julypt-1].str, false),
 					nil, nil, JulyS[Julypt-0].objlist)
@@ -1706,7 +1706,7 @@ Julydefault:
 		//line grammar/java11.y:550
 		{
 			if jtyp, ok := JulyS[Julypt-0].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-0].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJTypeArgument(jtyp, TS_NONE)
 			}
@@ -1715,7 +1715,7 @@ Julydefault:
 		//line grammar/java11.y:558
 		{
 			if jtyp, ok := JulyS[Julypt-0].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-0].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJTypeArgument(jtyp, TS_EXTENDS)
 			}
@@ -1724,7 +1724,7 @@ Julydefault:
 		//line grammar/java11.y:566
 		{
 			if jtyp, ok := JulyS[Julypt-0].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-0].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJTypeArgument(jtyp, TS_SUPER)
 			}
@@ -1830,7 +1830,7 @@ Julydefault:
 		//line grammar/java11.y:638
 		{
 			if jann, ok := JulyS[Julypt-0].obj.(*JAnnotation); !ok {
-				reportCastError("JAnnotation", JulyS[Julypt-0].obj)
+				ReportCastError("JAnnotation", JulyS[Julypt-0].obj)
 			} else {
 				jmod := NewJModifiers("", jann)
 				JulyVAL.obj = jmod
@@ -1845,7 +1845,7 @@ Julydefault:
 		//line grammar/java11.y:649
 		{
 			if jmod, ok := JulyS[Julypt-1].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-1].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-1].obj)
 			} else {
 				jmod.AddModifier(JulyS[Julypt-0].str)
 				JulyVAL.obj = jmod
@@ -1855,10 +1855,10 @@ Julydefault:
 		//line grammar/java11.y:658
 		{
 			if jmod, ok := JulyS[Julypt-1].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-1].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-1].obj)
 			} else {
 				if jann, ok := JulyS[Julypt-0].obj.(*JAnnotation); !ok {
-					reportCastError("JAnnotation", JulyS[Julypt-0].obj)
+					ReportCastError("JAnnotation", JulyS[Julypt-0].obj)
 				} else {
 					jmod.AddAnnotation(jann)
 					JulyVAL.obj = jmod
@@ -1977,7 +1977,7 @@ Julydefault:
 	case 119:
 		//line grammar/java11.y:755
 		{
-			JulyVAL.obj = NewGoEmpty()
+			JulyVAL.obj = NewJEmpty()
 		}
 	case 120:
 		//line grammar/java11.y:757
@@ -1988,7 +1988,7 @@ Julydefault:
 		//line grammar/java11.y:761
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				jblk.SetStatic()
 				JulyVAL.obj = jblk
@@ -1998,7 +1998,7 @@ Julydefault:
 		//line grammar/java11.y:770
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = jblk
 			}
@@ -2016,9 +2016,9 @@ Julydefault:
 		//line grammar/java11.y:789
 		{
 			if jmod, ok := JulyS[Julypt-3].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-3].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-3].obj)
 			} else if jmth, ok := JulyS[Julypt-0].obj.(*JMethodDecl); !ok {
-				reportCastError("JMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jmth.SetModifiers(jmod)
 				jmth.SetName(JulyS[Julypt-1].str)
@@ -2031,9 +2031,9 @@ Julydefault:
 		//line grammar/java11.y:803
 		{
 			if jmod, ok := JulyS[Julypt-2].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-2].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-2].obj)
 			} else if jmth, ok := JulyS[Julypt-0].obj.(*JMethodDecl); !ok {
-				reportCastError("JMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jmth.SetModifiers(jmod)
 				jmth.SetName(JulyS[Julypt-1].str)
@@ -2066,9 +2066,9 @@ Julydefault:
 		//line grammar/java11.y:837
 		{
 			if jmod, ok := JulyS[Julypt-2].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-2].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-2].obj)
 			} else if jtyp, ok := JulyS[Julypt-1].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-1].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-1].obj)
 			} else if JulyS[Julypt-0].objlist == nil || len(JulyS[Julypt-0].objlist) == 0 {
 				panic("MethodOrFieldRest list is nil/empty")
 			} else {
@@ -2080,7 +2080,7 @@ Julydefault:
 						jvar.SetModifiers(jmod)
 						jvar.SetType(jtyp)
 					} else {
-						reportCastError("MethodOrFieldDecl", obj)
+						ReportCastError("MethodOrFieldDecl", obj)
 					}
 				}
 				JulyVAL.objlist = JulyS[Julypt-0].objlist
@@ -2101,7 +2101,7 @@ Julydefault:
 		//line grammar/java11.y:870
 		{
 			if jmth, ok := JulyS[Julypt-0].obj.(*JMethodDecl); !ok {
-				reportCastError("JMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jmth.SetName(JulyS[Julypt-1].str)
 				JulyVAL.objlist = make([]JObject, 1)
@@ -2123,7 +2123,7 @@ Julydefault:
 		//line grammar/java11.y:893
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = jblk
 			}
@@ -2142,7 +2142,7 @@ Julydefault:
 		//line grammar/java11.y:911
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJMethodDecl(makeFormalParamList(JulyS[Julypt-3].objlist),
 					JulyS[Julypt-2].count, JulyS[Julypt-1].namelist, jblk)
@@ -2152,7 +2152,7 @@ Julydefault:
 		//line grammar/java11.y:920
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJMethodDecl(makeFormalParamList(JulyS[Julypt-2].objlist),
 					JulyS[Julypt-1].count, nil, jblk)
@@ -2162,7 +2162,7 @@ Julydefault:
 		//line grammar/java11.y:929
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJMethodDecl(makeFormalParamList(JulyS[Julypt-2].objlist),
 					0, JulyS[Julypt-1].namelist, jblk)
@@ -2172,7 +2172,7 @@ Julydefault:
 		//line grammar/java11.y:938
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJMethodDecl(makeFormalParamList(JulyS[Julypt-1].objlist),
 					0, nil, jblk)
@@ -2182,7 +2182,7 @@ Julydefault:
 		//line grammar/java11.y:950
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				jmth := NewJMethodDecl(makeFormalParamList(JulyS[Julypt-2].objlist), 0,
 					JulyS[Julypt-1].namelist, jblk)
@@ -2195,7 +2195,7 @@ Julydefault:
 		//line grammar/java11.y:962
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				jmth := NewJMethodDecl(makeFormalParamList(JulyS[Julypt-1].objlist), 0,
 					nil, jblk)
@@ -2208,7 +2208,7 @@ Julydefault:
 		//line grammar/java11.y:977
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJMethodDecl(makeFormalParamList(JulyS[Julypt-2].objlist), 0,
 					JulyS[Julypt-1].namelist, jblk)
@@ -2218,7 +2218,7 @@ Julydefault:
 		//line grammar/java11.y:986
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJMethodDecl(makeFormalParamList(JulyS[Julypt-1].objlist), 0,
 					nil, jblk)
@@ -2228,9 +2228,9 @@ Julydefault:
 		//line grammar/java11.y:998
 		{
 			if jmod, ok := JulyS[Julypt-2].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-2].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-2].obj)
 			} else if jmth, ok := JulyS[Julypt-0].obj.(*JMethodDecl); !ok {
-				reportCastError("JMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jmth.SetModifiers(jmod)
 				jmth.SetTypeParameters(JulyS[Julypt-1].objlist)
@@ -2241,10 +2241,10 @@ Julydefault:
 		//line grammar/java11.y:1013
 		{
 			if jmth, ok := JulyS[Julypt-0].obj.(*JMethodDecl); !ok {
-				reportCastError("JMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-					reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+					ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 				} else {
 					jmth.SetType(jtyp)
 					jmth.SetName(JulyS[Julypt-1].str)
@@ -2256,7 +2256,7 @@ Julydefault:
 		//line grammar/java11.y:1027
 		{
 			if jmth, ok := JulyS[Julypt-0].obj.(*JMethodDecl); !ok {
-				reportCastError("JMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jmth.SetType(NewJReferenceType(NewJTypeName(JulyS[Julypt-2].str, false),
 					nil, 0))
@@ -2268,7 +2268,7 @@ Julydefault:
 		//line grammar/java11.y:1038
 		{
 			if jmth, ok := JulyS[Julypt-0].obj.(*JMethodDecl); !ok {
-				reportCastError("JMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jmth.SetName(JulyS[Julypt-1].str)
 				jmth.SetType(NewJReferenceType(NewJTypeName(JulyS[Julypt-1].str, false),
@@ -2333,9 +2333,9 @@ Julydefault:
 		//line grammar/java11.y:1097
 		{
 			if jmod, ok := JulyS[Julypt-3].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-3].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-3].obj)
 			} else if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 			} else if JulyS[Julypt-0].objlist == nil || len(JulyS[Julypt-0].objlist) == 0 {
 				panic("InterfaceMethodOrFieldRest list is nil/empty")
 			} else {
@@ -2347,11 +2347,11 @@ Julydefault:
 					} else if jcd, ok := obj.(*JConstantDecl); ok {
 						jcd.SetModifiers(jmod)
 						jcd.SetType(jtyp)
-						if jcd.name == "" {
+						if !jcd.HasName() {
 							jcd.SetName(JulyS[Julypt-1].str)
 						}
 					} else {
-						reportCastError("InterfaceMethodOrFieldDecl", obj)
+						ReportCastError("InterfaceMethodOrFieldDecl", obj)
 					}
 				}
 				JulyVAL.objlist = JulyS[Julypt-0].objlist
@@ -2394,7 +2394,7 @@ Julydefault:
 		//line grammar/java11.y:1159
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJConstantDecl(JulyS[Julypt-3].str, JulyS[Julypt-2].count, init)
 			}
@@ -2403,7 +2403,7 @@ Julydefault:
 		//line grammar/java11.y:1167
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJConstantDecl(JulyS[Julypt-2].str, 0, init)
 			}
@@ -2412,7 +2412,7 @@ Julydefault:
 		//line grammar/java11.y:1178
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJConstantDecl("", JulyS[Julypt-2].count, init)
 			}
@@ -2421,7 +2421,7 @@ Julydefault:
 		//line grammar/java11.y:1186
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJConstantDecl("", 0, init)
 			}
@@ -2466,11 +2466,11 @@ Julydefault:
 		//line grammar/java11.y:1233
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 			} else if jifc, ok := JulyS[Julypt-0].obj.(*JInterfaceMethodDecl); !ok {
-				reportCastError("JInterfaceMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JInterfaceMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jifc.SetModifiers(jmod)
 				jifc.SetTypeParameters(JulyS[Julypt-3].objlist)
@@ -2484,9 +2484,9 @@ Julydefault:
 		//line grammar/java11.y:1250
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else if jifc, ok := JulyS[Julypt-0].obj.(*JInterfaceMethodDecl); !ok {
-				reportCastError("JInterfaceMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JInterfaceMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jifc.SetModifiers(jmod)
 				jifc.SetTypeParameters(JulyS[Julypt-3].objlist)
@@ -2501,9 +2501,9 @@ Julydefault:
 		//line grammar/java11.y:1266
 		{
 			if jmod, ok := JulyS[Julypt-3].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-3].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-3].obj)
 			} else if jifc, ok := JulyS[Julypt-0].obj.(*JInterfaceMethodDecl); !ok {
-				reportCastError("JInterfaceMethodDecl", JulyS[Julypt-0].obj)
+				ReportCastError("JInterfaceMethodDecl", JulyS[Julypt-0].obj)
 			} else {
 				jifc.SetModifiers(jmod)
 				jifc.SetType(NewJReferenceType(NewJTypeName("void", true),
@@ -2538,10 +2538,10 @@ Julydefault:
 		//line grammar/java11.y:1301
 		{
 			if jmod, ok := JulyS[Julypt-1].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-1].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-1].obj)
 			} else {
 				if fprm, ok := JulyS[Julypt-0].obj.(*JFormalParameter); !ok {
-					reportCastError("JFormalParameter", JulyS[Julypt-0].obj)
+					ReportCastError("JFormalParameter", JulyS[Julypt-0].obj)
 				} else {
 					fprm.SetModifiers(jmod)
 					JulyVAL.obj = fprm
@@ -2557,7 +2557,7 @@ Julydefault:
 		//line grammar/java11.y:1319
 		{
 			if jtyp, ok := JulyS[Julypt-5].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-5].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-5].obj)
 			} else {
 				JulyVAL.obj = NewJFormalParameter(jtyp, true, JulyS[Julypt-1].str, JulyS[Julypt-0].count)
 			}
@@ -2566,7 +2566,7 @@ Julydefault:
 		//line grammar/java11.y:1327
 		{
 			if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = NewJFormalParameter(jtyp, false, JulyS[Julypt-1].str, JulyS[Julypt-0].count)
 			}
@@ -2575,7 +2575,7 @@ Julydefault:
 		//line grammar/java11.y:1335
 		{
 			if jtyp, ok := JulyS[Julypt-4].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-4].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-4].obj)
 			} else {
 				JulyVAL.obj = NewJFormalParameter(jtyp, true, JulyS[Julypt-0].str, 0)
 			}
@@ -2584,7 +2584,7 @@ Julydefault:
 		//line grammar/java11.y:1343
 		{
 			if jtyp, ok := JulyS[Julypt-1].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-1].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-1].obj)
 			} else {
 				JulyVAL.obj = NewJFormalParameter(jtyp, false, JulyS[Julypt-0].str, 0)
 			}
@@ -2598,7 +2598,7 @@ Julydefault:
 		//line grammar/java11.y:1356
 		{
 			if jann, ok := JulyS[Julypt-0].obj.(*JAnnotation); !ok {
-				reportCastError("JAnnotation", JulyS[Julypt-0].obj)
+				ReportCastError("JAnnotation", JulyS[Julypt-0].obj)
 			} else {
 				jmod := NewJModifiers("", jann)
 				JulyVAL.obj = jmod
@@ -2608,7 +2608,7 @@ Julydefault:
 		//line grammar/java11.y:1365
 		{
 			if jmod, ok := JulyS[Julypt-1].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-1].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-1].obj)
 			} else {
 				jmod.AddModifier(JulyS[Julypt-0].str)
 				JulyVAL.obj = jmod
@@ -2618,10 +2618,10 @@ Julydefault:
 		//line grammar/java11.y:1374
 		{
 			if jmod, ok := JulyS[Julypt-1].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-1].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-1].obj)
 			} else {
 				if jann, ok := JulyS[Julypt-0].obj.(*JAnnotation); !ok {
-					reportCastError("JAnnotation", JulyS[Julypt-0].obj)
+					ReportCastError("JAnnotation", JulyS[Julypt-0].obj)
 				} else {
 					jmod.AddAnnotation(jann)
 					JulyVAL.obj = jmod
@@ -2653,7 +2653,7 @@ Julydefault:
 		//line grammar/java11.y:1407
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJVariableDecl(JulyS[Julypt-3].str, JulyS[Julypt-2].count, init)
 			}
@@ -2667,7 +2667,7 @@ Julydefault:
 		//line grammar/java11.y:1417
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJVariableDecl(JulyS[Julypt-2].str, 0, init)
 			}
@@ -2691,7 +2691,7 @@ Julydefault:
 		//line grammar/java11.y:1441
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.varlist = make([]*JVariableInit, 1)
 				JulyVAL.varlist[0] = init
@@ -2701,7 +2701,7 @@ Julydefault:
 		//line grammar/java11.y:1450
 		{
 			if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.varlist = append(JulyS[Julypt-2].varlist, init)
 			}
@@ -2765,10 +2765,10 @@ Julydefault:
 		//line grammar/java11.y:1502
 		{
 			if jmod, ok := JulyS[Julypt-3].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-3].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-3].obj)
 			} else {
 				if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-					reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+					ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 				} else {
 					JulyVAL.obj = NewJLocalVariableDecl(jmod, jtyp,
 						makeVarDeclList(JulyS[Julypt-1].objlist))
@@ -2779,7 +2779,7 @@ Julydefault:
 		//line grammar/java11.y:1515
 		{
 			if jtyp, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = NewJLocalVariableDecl(nil, jtyp,
 					makeVarDeclList(JulyS[Julypt-1].objlist))
@@ -2789,7 +2789,7 @@ Julydefault:
 		//line grammar/java11.y:1527
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = jblk
 			}
@@ -2797,7 +2797,7 @@ Julydefault:
 	case 219:
 		//line grammar/java11.y:1535
 		{
-			JulyVAL.obj = NewGoEmpty()
+			JulyVAL.obj = NewJEmpty()
 		}
 	case 220:
 		//line grammar/java11.y:1537
@@ -2862,49 +2862,49 @@ Julydefault:
 				jforvar.SetBody(JulyS[Julypt-0].obj)
 				JulyVAL.obj = jforvar
 			} else {
-				reportCastError("JForVar", JulyS[Julypt-2].obj)
+				ReportCastError("JForVar", JulyS[Julypt-2].obj)
 			}
 		}
 	case 231:
 		//line grammar/java11.y:1582
 		{
-			JulyVAL.obj = NewJumpToLabel(JulyS[Julypt-2].token, JulyS[Julypt-1].str)
+			JulyVAL.obj = NewJJumpToLabel(JulyS[Julypt-2].token, JulyS[Julypt-1].str)
 		}
 	case 232:
 		//line grammar/java11.y:1584
 		{
-			JulyVAL.obj = NewJSimpleStatement(NewGoKeyword(JulyS[Julypt-1].token, JulyS[Julypt-1].str), nil)
+			JulyVAL.obj = NewJSimpleStatement(NewJKeyword(JulyS[Julypt-1].token, JulyS[Julypt-1].str), nil)
 		}
 	case 233:
 		//line grammar/java11.y:1586
 		{
-			JulyVAL.obj = NewJumpToLabel(JulyS[Julypt-2].token, JulyS[Julypt-1].str)
+			JulyVAL.obj = NewJJumpToLabel(JulyS[Julypt-2].token, JulyS[Julypt-1].str)
 		}
 	case 234:
 		//line grammar/java11.y:1588
 		{
-			JulyVAL.obj = NewJSimpleStatement(NewGoKeyword(JulyS[Julypt-1].token, JulyS[Julypt-1].str), nil)
+			JulyVAL.obj = NewJSimpleStatement(NewJKeyword(JulyS[Julypt-1].token, JulyS[Julypt-1].str), nil)
 		}
 	case 235:
 		//line grammar/java11.y:1590
 		{
-			JulyVAL.obj = NewJSimpleStatement(NewGoKeyword(JulyS[Julypt-2].token, JulyS[Julypt-2].str), JulyS[Julypt-1].obj)
+			JulyVAL.obj = NewJSimpleStatement(NewJKeyword(JulyS[Julypt-2].token, JulyS[Julypt-2].str), JulyS[Julypt-1].obj)
 		}
 	case 236:
 		//line grammar/java11.y:1592
 		{
-			JulyVAL.obj = NewJSimpleStatement(NewGoKeyword(JulyS[Julypt-1].token, JulyS[Julypt-1].str), nil)
+			JulyVAL.obj = NewJSimpleStatement(NewJKeyword(JulyS[Julypt-1].token, JulyS[Julypt-1].str), nil)
 		}
 	case 237:
 		//line grammar/java11.y:1594
 		{
-			JulyVAL.obj = NewJSimpleStatement(NewGoKeyword(JulyS[Julypt-2].token, JulyS[Julypt-2].str), JulyS[Julypt-1].obj)
+			JulyVAL.obj = NewJSimpleStatement(NewJKeyword(JulyS[Julypt-2].token, JulyS[Julypt-2].str), JulyS[Julypt-1].obj)
 		}
 	case 238:
 		//line grammar/java11.y:1596
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJSynchronized(JulyS[Julypt-2].obj, jblk)
 			}
@@ -2913,7 +2913,7 @@ Julydefault:
 		//line grammar/java11.y:1604
 		{
 			if jblk, ok := JulyS[Julypt-1].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-1].obj)
+				ReportCastError("JBlock", JulyS[Julypt-1].obj)
 			} else {
 				JulyVAL.obj = NewJTry(jblk, JulyS[Julypt-0].objlist, nil)
 			}
@@ -2922,9 +2922,9 @@ Julydefault:
 		//line grammar/java11.y:1612
 		{
 			if jblk, ok := JulyS[Julypt-2].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-2].obj)
+				ReportCastError("JBlock", JulyS[Julypt-2].obj)
 			} else if jfin, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJTry(jblk, JulyS[Julypt-1].objlist, jfin)
 			}
@@ -2933,9 +2933,9 @@ Julydefault:
 		//line grammar/java11.y:1622
 		{
 			if jblk, ok := JulyS[Julypt-1].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-1].obj)
+				ReportCastError("JBlock", JulyS[Julypt-1].obj)
 			} else if jfin, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJTry(jblk, nil, jfin)
 			}
@@ -2975,10 +2975,10 @@ Julydefault:
 		//line grammar/java11.y:1653
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else {
 				if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-					reportCastError("JBlock", JulyS[Julypt-0].obj)
+					ReportCastError("JBlock", JulyS[Julypt-0].obj)
 				} else {
 					JulyVAL.obj = NewJCatch(jmod, JulyS[Julypt-3].namelist, JulyS[Julypt-2].str, jblk)
 				}
@@ -2988,7 +2988,7 @@ Julydefault:
 		//line grammar/java11.y:1665
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJCatch(nil, JulyS[Julypt-3].namelist, JulyS[Julypt-2].str, jblk)
 			}
@@ -3008,7 +3008,7 @@ Julydefault:
 		//line grammar/java11.y:1686
 		{
 			if jblk, ok := JulyS[Julypt-0].obj.(*JBlock); !ok {
-				reportCastError("JBlock", JulyS[Julypt-0].obj)
+				ReportCastError("JBlock", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = jblk
 			}
@@ -3120,11 +3120,11 @@ Julydefault:
 		//line grammar/java11.y:1773
 		{
 			if jmod, ok := JulyS[Julypt-4].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-4].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-4].obj)
 			} else if jtyp, ok := JulyS[Julypt-3].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-3].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-3].obj)
 			} else if jvid, ok := JulyS[Julypt-2].obj.(*tmpVariableId); !ok {
-				reportCastError("tmpVariableId", JulyS[Julypt-2].obj)
+				ReportCastError("tmpVariableId", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = NewJForColon(jmod, jtyp, jvid.name, jvid.dims, JulyS[Julypt-0].obj)
 			}
@@ -3133,9 +3133,9 @@ Julydefault:
 		//line grammar/java11.y:1785
 		{
 			if jtyp, ok := JulyS[Julypt-3].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-3].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-3].obj)
 			} else if jvid, ok := JulyS[Julypt-2].obj.(*tmpVariableId); !ok {
-				reportCastError("tmpVariableId", JulyS[Julypt-2].obj)
+				ReportCastError("tmpVariableId", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = NewJForColon(nil, jtyp, jvid.name, jvid.dims, JulyS[Julypt-0].obj)
 			}
@@ -3184,7 +3184,7 @@ Julydefault:
 		//line grammar/java11.y:1836
 		{
 			if jfor, ok := JulyS[Julypt-4].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-4].obj)
+				ReportCastError("JForVar", JulyS[Julypt-4].obj)
 			} else {
 				if JulyS[Julypt-2].obj != nil {
 					jfor.SetExpr(JulyS[Julypt-2].obj)
@@ -3201,7 +3201,7 @@ Julydefault:
 		//line grammar/java11.y:1852
 		{
 			if jfor, ok := JulyS[Julypt-3].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-3].obj)
+				ReportCastError("JForVar", JulyS[Julypt-3].obj)
 			} else {
 				if JulyS[Julypt-1].obj != nil {
 					jfor.SetExpr(JulyS[Julypt-1].obj)
@@ -3214,7 +3214,7 @@ Julydefault:
 		//line grammar/java11.y:1864
 		{
 			if jfor, ok := JulyS[Julypt-3].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-3].obj)
+				ReportCastError("JForVar", JulyS[Julypt-3].obj)
 			} else {
 				if JulyS[Julypt-0].objlist != nil {
 					jfor.SetIncr(JulyS[Julypt-0].objlist)
@@ -3227,7 +3227,7 @@ Julydefault:
 		//line grammar/java11.y:1876
 		{
 			if jfor, ok := JulyS[Julypt-2].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-2].obj)
+				ReportCastError("JForVar", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = jfor
 			}
@@ -3236,9 +3236,9 @@ Julydefault:
 		//line grammar/java11.y:1887
 		{
 			if jfor, ok := JulyS[Julypt-4].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-4].obj)
+				ReportCastError("JForVar", JulyS[Julypt-4].obj)
 			} else if init, ok := JulyS[Julypt-2].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-3].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-3].obj)
 			} else {
 				jfor.SetInit(init)
 				jfor.SetDecl(JulyS[Julypt-0].obj)
@@ -3249,9 +3249,9 @@ Julydefault:
 		//line grammar/java11.y:1899
 		{
 			if jfor, ok := JulyS[Julypt-2].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-2].obj)
+				ReportCastError("JForVar", JulyS[Julypt-2].obj)
 			} else if init, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-1].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-1].obj)
 			} else {
 				jfor.SetInit(init)
 				JulyVAL.obj = jfor
@@ -3261,7 +3261,7 @@ Julydefault:
 		//line grammar/java11.y:1910
 		{
 			if jfor, ok := JulyS[Julypt-2].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-2].obj)
+				ReportCastError("JForVar", JulyS[Julypt-2].obj)
 			} else {
 				jfor.SetDecl(JulyS[Julypt-0].obj)
 				JulyVAL.obj = jfor
@@ -3271,7 +3271,7 @@ Julydefault:
 		//line grammar/java11.y:1919
 		{
 			if jfor, ok := JulyS[Julypt-0].obj.(*JForVar); !ok {
-				reportCastError("JForVar", JulyS[Julypt-0].obj)
+				ReportCastError("JForVar", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = jfor
 			}
@@ -3280,11 +3280,11 @@ Julydefault:
 		//line grammar/java11.y:1930
 		{
 			if jmod, ok := JulyS[Julypt-2].obj.(*JModifiers); !ok {
-				reportCastError("JModifiers", JulyS[Julypt-2].obj)
+				ReportCastError("JModifiers", JulyS[Julypt-2].obj)
 			} else if jtyp, ok := JulyS[Julypt-1].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-1].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-1].obj)
 			} else if jvid, ok := JulyS[Julypt-0].obj.(*tmpVariableId); !ok {
-				reportCastError("tmpVariableId", JulyS[Julypt-0].obj)
+				ReportCastError("tmpVariableId", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJForVar(jmod, jtyp, jvid.name, jvid.dims)
 			}
@@ -3293,9 +3293,9 @@ Julydefault:
 		//line grammar/java11.y:1942
 		{
 			if jtyp, ok := JulyS[Julypt-1].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-1].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-1].obj)
 			} else if jvid, ok := JulyS[Julypt-0].obj.(*tmpVariableId); !ok {
-				reportCastError("tmpVariableId", JulyS[Julypt-0].obj)
+				ReportCastError("tmpVariableId", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJForVar(nil, jtyp, jvid.name, jvid.dims)
 			}
@@ -3326,7 +3326,7 @@ Julydefault:
 		//line grammar/java11.y:1975
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("ConditionalExpression cannot be nil")
+				ReportError("ConditionalExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3400,7 +3400,7 @@ Julydefault:
 		//line grammar/java11.y:2015
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("LogicalOrExpression cannot be nil")
+				ReportError("LogicalOrExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3414,7 +3414,7 @@ Julydefault:
 		//line grammar/java11.y:2030
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("LogicalAndExpression cannot be nil")
+				ReportError("LogicalAndExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3433,7 +3433,7 @@ Julydefault:
 		//line grammar/java11.y:2050
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("BitwiseOrExpression cannot be nil")
+				ReportError("BitwiseOrExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3452,7 +3452,7 @@ Julydefault:
 		//line grammar/java11.y:2070
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("BitwiseXorExpression cannot be nil")
+				ReportError("BitwiseXorExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3471,7 +3471,7 @@ Julydefault:
 		//line grammar/java11.y:2090
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("BitwiseAndExpression cannot be nil")
+				ReportError("BitwiseAndExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3490,7 +3490,7 @@ Julydefault:
 		//line grammar/java11.y:2110
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("EqualityExpression cannot be nil")
+				ReportError("EqualityExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3509,7 +3509,7 @@ Julydefault:
 		//line grammar/java11.y:2130
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("RelationalExpression cannot be nil")
+				ReportError("RelationalExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3533,7 +3533,7 @@ Julydefault:
 		//line grammar/java11.y:2152
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("AdditiveExpression cannot be nil")
+				ReportError("AdditiveExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3547,7 +3547,7 @@ Julydefault:
 		//line grammar/java11.y:2164
 		{
 			if jtyp, ok := JulyS[Julypt-0].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-0].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = NewJInstanceOf(JulyS[Julypt-2].obj, jtyp)
 			}
@@ -3591,7 +3591,7 @@ Julydefault:
 		//line grammar/java11.y:2192
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("MultiplicativeExpression cannot be nil")
+				ReportError("MultiplicativeExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3615,7 +3615,7 @@ Julydefault:
 		//line grammar/java11.y:2214
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("CastExpression cannot be nil")
+				ReportError("CastExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3679,7 +3679,7 @@ Julydefault:
 		//line grammar/java11.y:2255
 		{
 			if ref, ok := JulyS[Julypt-2].obj.(*JReferenceType); !ok {
-				reportCastError("JReferenceType", JulyS[Julypt-2].obj)
+				ReportCastError("JReferenceType", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = NewJCastExpr(ref, JulyS[Julypt-0].obj)
 			}
@@ -3711,7 +3711,7 @@ Julydefault:
 		//line grammar/java11.y:2280
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("PrimaryExpression cannot be nil")
+				ReportError("PrimaryExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3734,23 +3734,23 @@ Julydefault:
 	case 367:
 		//line grammar/java11.y:2300
 		{
-			JulyVAL.obj = NewGoKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
+			JulyVAL.obj = NewJKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
 		}
 	case 368:
 		//line grammar/java11.y:2302
 		{
-			JulyVAL.obj = NewGoKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
+			JulyVAL.obj = NewJKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
 		}
 	case 369:
 		//line grammar/java11.y:2304
 		{
-			JulyVAL.obj = NewGoKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
+			JulyVAL.obj = NewJKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
 		}
 	case 370:
 		//line grammar/java11.y:2306
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("PlainNewAllocationExpression cannot be nil")
+				ReportError("PlainNewAllocationExpression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3759,7 +3759,7 @@ Julydefault:
 		//line grammar/java11.y:2314
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("PlainNewAllocationExpression cannot be nil")
+				ReportError("PlainNewAllocationExpression cannot be nil")
 			}
 
 			JulyVAL.obj = NewJNameDotObject(JulyS[Julypt-2].name, JulyS[Julypt-0].obj)
@@ -3768,7 +3768,7 @@ Julydefault:
 		//line grammar/java11.y:2322
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("ComplexPrimaryNoParenthesis cannot be nil")
+				ReportError("ComplexPrimaryNoParenthesis cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-0].obj
@@ -3777,7 +3777,7 @@ Julydefault:
 		//line grammar/java11.y:2330
 		{
 			if JulyS[Julypt-1].obj == nil {
-				reportError("Expression cannot be nil")
+				ReportError("Expression cannot be nil")
 			}
 
 			JulyVAL.obj = JulyS[Julypt-1].obj
@@ -3786,9 +3786,9 @@ Julydefault:
 		//line grammar/java11.y:2341
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("ArrayAllocationExpression cannot be nil")
+				ReportError("ArrayAllocationExpression cannot be nil")
 			} else if aae, ok := JulyS[Julypt-0].obj.(*JArrayAlloc); !ok {
-				reportCastError("JArrayAlloc", JulyS[Julypt-0].obj)
+				ReportCastError("JArrayAlloc", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = aae
 			}
@@ -3797,9 +3797,9 @@ Julydefault:
 		//line grammar/java11.y:2351
 		{
 			if JulyS[Julypt-2].obj == nil {
-				reportError("ArrayAllocationExpression cannot be nil")
+				ReportError("ArrayAllocationExpression cannot be nil")
 			} else if aae, ok := JulyS[Julypt-2].obj.(*JArrayAlloc); !ok {
-				reportCastError("JArrayAlloc", JulyS[Julypt-2].obj)
+				ReportCastError("JArrayAlloc", JulyS[Julypt-2].obj)
 			} else {
 				JulyVAL.obj = aae
 			}
@@ -3808,9 +3808,9 @@ Julydefault:
 		//line grammar/java11.y:2361
 		{
 			if JulyS[Julypt-3].obj == nil {
-				reportError("ArrayAllocationExpression cannot be nil")
+				ReportError("ArrayAllocationExpression cannot be nil")
 			} else if aae, ok := JulyS[Julypt-3].obj.(*JArrayAlloc); !ok {
-				reportCastError("JArrayAlloc", JulyS[Julypt-3].obj)
+				ReportCastError("JArrayAlloc", JulyS[Julypt-3].obj)
 			} else {
 				aae.SetInitializers(JulyS[Julypt-1].varlist)
 				JulyVAL.obj = aae
@@ -3820,9 +3820,9 @@ Julydefault:
 		//line grammar/java11.y:2372
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("ClassAllocationExpression cannot be nil")
+				ReportError("ClassAllocationExpression cannot be nil")
 			} else if cae, ok := JulyS[Julypt-0].obj.(*JClassAllocationExpr); !ok {
-				reportCastError("JClassAllocationExpr", JulyS[Julypt-0].obj)
+				ReportCastError("JClassAllocationExpr", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.obj = cae
 			}
@@ -3831,9 +3831,9 @@ Julydefault:
 		//line grammar/java11.y:2382
 		{
 			if JulyS[Julypt-1].obj == nil {
-				reportError("ClassAllocationExpression cannot be nil")
+				ReportError("ClassAllocationExpression cannot be nil")
 			} else if cae, ok := JulyS[Julypt-1].obj.(*JClassAllocationExpr); !ok {
-				reportCastError("JClassAllocationExpr", JulyS[Julypt-1].obj)
+				ReportCastError("JClassAllocationExpr", JulyS[Julypt-1].obj)
 			} else {
 				cae.SetBody(JulyS[Julypt-0].objlist)
 				JulyVAL.obj = cae
@@ -3842,12 +3842,12 @@ Julydefault:
 	case 379:
 		//line grammar/java11.y:2396
 		{
-			JulyVAL.obj = NewGoLiteral(JulyS[Julypt-0].str)
+			JulyVAL.obj = NewJLiteral(JulyS[Julypt-0].str)
 		}
 	case 380:
 		//line grammar/java11.y:2398
 		{
-			JulyVAL.obj = NewGoKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
+			JulyVAL.obj = NewJKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str)
 		}
 	case 381:
 		//line grammar/java11.y:2400
@@ -3877,18 +3877,18 @@ Julydefault:
 	case 386:
 		//line grammar/java11.y:2410
 		{
-			JulyVAL.obj = NewJNameDotObject(JulyS[Julypt-2].name, NewGoKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str))
+			JulyVAL.obj = NewJNameDotObject(JulyS[Julypt-2].name, NewJKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str))
 		}
 	case 387:
 		//line grammar/java11.y:2412
 		{
-			JulyVAL.obj = NewJNameDotObject(JulyS[Julypt-2].name, NewGoKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str))
+			JulyVAL.obj = NewJNameDotObject(JulyS[Julypt-2].name, NewJKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str))
 		}
 	case 388:
 		//line grammar/java11.y:2414
 		{
 			JulyVAL.obj = NewJNameDotObject(NewJTypeName(JulyS[Julypt-2].str, true),
-				NewGoKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str))
+				NewJKeyword(JulyS[Julypt-0].token, JulyS[Julypt-0].str))
 		}
 	case 389:
 		//line grammar/java11.y:2419
@@ -3946,7 +3946,7 @@ Julydefault:
 		//line grammar/java11.y:2454
 		{
 			if vin, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.varlist = make([]*JVariableInit, 1)
 				JulyVAL.varlist[0] = vin
@@ -3956,7 +3956,7 @@ Julydefault:
 		//line grammar/java11.y:2463
 		{
 			if vin, ok := JulyS[Julypt-0].obj.(*JVariableInit); !ok {
-				reportCastError("JVariableInit", JulyS[Julypt-0].obj)
+				ReportCastError("JVariableInit", JulyS[Julypt-0].obj)
 			} else {
 				JulyVAL.varlist = append(JulyS[Julypt-2].varlist, vin)
 			}
@@ -4103,7 +4103,7 @@ Julydefault:
 		//line grammar/java11.y:2572
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("Found empty class body entry")
+				ReportError("Found empty class body entry")
 			}
 
 			JulyVAL.objlist = make([]JObject, 1)
@@ -4113,7 +4113,7 @@ Julydefault:
 		//line grammar/java11.y:2581
 		{
 			if JulyS[Julypt-0].obj == nil {
-				reportError("Found empty class body entry")
+				ReportError("Found empty class body entry")
 			}
 
 			JulyVAL.objlist = append(JulyS[Julypt-1].objlist, JulyS[Julypt-0].obj)

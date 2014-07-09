@@ -3,6 +3,8 @@ package parser
 import (
 	"go/ast"
 	"go/token"
+
+	"github.com/dglo/java2go/grammar"
 )
 
 type GoFunc interface {
@@ -18,7 +20,7 @@ type GoFuncData struct {
 	goname string
 	func_type methodType
 	rcvr string
-	params []*JFormalParameter
+	params []*grammar.JFormalParameter
 }
 
 func (gf *GoFuncData) Create() ast.Stmt {
@@ -131,7 +133,7 @@ func (gf *GoFuncData) results() *ast.FieldList {
 
 type GoFuncRef struct {
 	gofunc GoFunc
-	suffix *JTypeName
+	suffix *grammar.JTypeName
 }
 
 func (gfr *GoFuncRef) Create() ast.Stmt {
