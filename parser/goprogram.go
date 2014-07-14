@@ -109,6 +109,10 @@ func (fv *FakeVar) Name() string {
 	return fv.name
 }
 
+func (fv *FakeVar) Receiver() string {
+	return ""
+}
+
 func (fv *FakeVar) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
 	return xform(parent, prog, cls, fv)
 }
@@ -378,6 +382,14 @@ func (nae *GoArrayReference) Name() string {
 	}
 
 	return nae.obj.String()
+}
+
+func (nae *GoArrayReference) Receiver() string {
+	if nae.obj == nil {
+		return nae.govar.Receiver()
+	}
+
+	return ""
 }
 
 func (nae *GoArrayReference) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
@@ -943,6 +955,41 @@ func (cls *GoClassDefinition) AddNewMethod(gs *GoState, mth *grammar.JMethodDecl
 	cls.AddMethod(NewGoClassMethod(cls, gs, mth))
 }
 
+func (cls *GoClassDefinition) addVar(v *GoVarInit) {
+	if v.govar.IsFinal() && v.expr != nil {
+		if _, is_literal := v.expr.(*GoLiteral); !is_literal {
+			if cls.program.verbose {
+				log.Printf("//ERR// Ignoring non-literal constant %v for %v\n",
+					v.expr, v.govar)
+			} else {
+				log.Printf("//ERR// Ignoring non-literal constant\n")
+			}
+		} else {
+			con := &GoConstant{name: v.govar.GoName(),
+				typedata: v.govar.VarType(), init: v}
+			if cls.constants == nil {
+				cls.constants = make([]*GoConstant, 0)
+			}
+			cls.constants = append(cls.constants, con)
+			return
+		}
+	}
+
+	if v.govar.IsStatic() {
+		stat := &GoStatic{init: v}
+		if cls.statics == nil {
+			cls.statics = make([]*GoStatic, 0)
+		}
+		cls.statics = append(cls.statics, stat)
+		return
+	}
+
+	if cls.vars == nil {
+		cls.vars = make([]*GoVarInit, 0)
+	}
+	cls.vars = append(cls.vars, v)
+}
+
 func (cls *GoClassDefinition) Constants() []ast.Decl {
 	if cls.constants == nil || len(cls.constants) == 0 {
 		return nil
@@ -1019,6 +1066,21 @@ func (cls *GoClassDefinition) finalize(gp *GoProgram) {
 	cls.renumberDuplicateMethods(gp)
 }
 
+func findAssigned(unasgned_vars []*GoVarInit, gv GoVar) int {
+	for i, v := range unasgned_vars {
+		if v == nil {
+			continue
+		}
+
+		if v.govar.Equals(gv) {
+			unasgned_vars[i] = nil
+			return i
+		}
+	}
+
+	return -1
+}
+
 func (cls *GoClassDefinition) FindMethod(name string,
 	args *GoMethodArguments) GoMethod {
 	return cls.methods.FindMethod(name, args)
@@ -1046,30 +1108,6 @@ func (cls *GoClassDefinition) findVariable(typename *grammar.JTypeName) GoVar {
 }
 
 func (cls *GoClassDefinition) internalizeVarInits(gp *GoProgram) {
-	// build list of variables which are initialized outside constructors
-	init_vars := make([]*GoVarInit, 0)
-	for _, v := range cls.vars {
-		if v.expr != nil {
-			_, is_literal := v.expr.(*GoLiteral)
-			if v.govar.IsFinal() && is_literal {
-				con := &GoConstant{name: v.govar.GoName(),
-					typedata: v.govar.VarType(), init: v}
-				if cls.constants == nil {
-					cls.constants = make([]*GoConstant, 0)
-				}
-				cls.constants = append(cls.constants, con)
-			} else if v.govar.IsStatic() {
-				stat := &GoStatic{init: v}
-				if cls.statics == nil {
-					cls.statics = make([]*GoStatic, 0)
-				}
-				cls.statics = append(cls.statics, stat)
-			} else {
-				init_vars = append(init_vars, v)
-			}
-		}
-	}
-
 	// build list of constructors
 	ctors := make([]GoMethod, 0)
 	for _, key := range cls.methods.SortedKeys() {
@@ -1103,18 +1141,55 @@ func (cls *GoClassDefinition) internalizeVarInits(gp *GoProgram) {
 		m.Body().stmts = stmts
 	}
 
+	// if there are no constructors, create one
+	if len(ctors) == 0 {
+		m := cls.createConstructor(gp)
+		ctors = append(ctors, m)
+	}
+
+	// build list of initialized variables
+	init_vars := make([]*GoVarInit, 0)
+	for _, v := range cls.vars {
+		if v.expr != nil {
+			init_vars = append(init_vars, v)
+		}
+	}
+
 	// if nothing is initialized, we're done
 	if len(init_vars) > 0 {
-		// if there are no constructors, create one
-		if len(ctors) == 0 {
-			m := cls.createConstructor(gp)
-			ctors = append(ctors, m)
-		}
-
 		// add initializers to all constructors
 		for i, m := range ctors {
 			if gp.verbose {
 				log.Printf("//ERR// ## CTOR#%d: %v\n", i, m)
+			}
+
+			// initially assume all variables need to be initialized
+			num_unasgned := len(init_vars)
+			unasgned_vars := make([]*GoVarInit, num_unasgned)
+			for i, v := range init_vars {
+				unasgned_vars[i] = v
+			}
+
+			for _, s := range m.Body().stmts {
+				if asgn, aok := s.(*GoAssign); aok {
+					// ignore non-assignments
+					if asgn.tok != token.ASSIGN {
+						continue
+					}
+
+					// ignore receiver init
+					if asgn.govar == m.Receiver() {
+						continue
+					}
+
+					if i := findAssigned(unasgned_vars, asgn.govar); i >= 0 {
+						num_unasgned -= 1
+					}
+				}
+			}
+
+			if num_unasgned == 0 {
+				continue
 			}
 
 			for i, s := range m.Body().stmts {
@@ -1125,8 +1200,11 @@ func (cls *GoClassDefinition) internalizeVarInits(gp *GoProgram) {
 							m.Body().stmts[:i+1]...)
 
 						// add all struct variable initialization
-						for _, v := range init_vars {
-							tmp = append(tmp, v.createInitializer(m.Receiver()))
+						for _, v := range unasgned_vars {
+							if v != nil {
+								tmp = append(tmp,
+									v.createInitializer(m.Receiver()))
+							}
 						}
 
 						// append remaining statements
@@ -1140,8 +1218,6 @@ func (cls *GoClassDefinition) internalizeVarInits(gp *GoProgram) {
 				}
 			}
 		}
-
-		cls.vars = init_vars
 	}
 }
 
@@ -1238,9 +1314,7 @@ func (cls *GoClassDefinition) struct_type() *ast.StructType {
 		flds = append(flds, &ast.Field{Type: stype})
 	}
 	for _, v := range cls.vars {
-		if !v.govar.IsFinal() && !v.govar.IsStatic() {
-			flds = append(flds, makeField(v.govar.GoName(), v.govar.Type()))
-		}
+		flds = append(flds, makeField(v.govar.GoName(), v.govar.Type()))
 	}
 
 	return &ast.StructType{Fields: &ast.FieldList{List: flds}}
@@ -1772,7 +1846,11 @@ func (con *GoConstant) IsStatic() bool {
 }
 
 func (con *GoConstant) Name() string {
-	panic("Unimplemented")
+	return con.name
+}
+
+func (con *GoConstant) Receiver() string {
+	return ""
 }
 
 func (con *GoConstant) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
@@ -1804,7 +1882,7 @@ func (con *GoConstant) Type() ast.Expr {
 }
 
 func (con *GoConstant) VarType() *TypeData {
-	panic("GoConstant.VarType() unimplemented")
+	return con.typedata
 }
 
 func (con *GoConstant) WriteString(out io.Writer) {
@@ -4353,6 +4431,10 @@ func (odn *GoObjectDotName) Name() string {
 	return odn.GoName()
 }
 
+func (odn *GoObjectDotName) Receiver() string {
+	return ""
+}
+
 func (odn *GoObjectDotName) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
 	if odn.obj != nil {
 		obj, is_nil := odn.obj.RunTransform(xform, prog, cls, odn)
@@ -5134,7 +5216,19 @@ func (sel *GoSelector) IsStatic() bool {
 }
 
 func (sel *GoSelector) Name() string {
-	panic("GoSelector.Name() unimplemented")
+	if gv, ok := sel.sel.(*GoVarData); ok {
+		return gv.Name()
+	}
+
+	panic(fmt.Sprintf("GoSelector.Name() unimplemented for %v", sel.sel))
+}
+
+func (sel *GoSelector) Receiver() string {
+	if gv, ok := sel.expr.(*GoVarData); ok {
+		return gv.Name()
+	}
+
+	panic(fmt.Sprintf("GoSelector.Receiver() unimplemented for %v", sel.expr))
 }
 
 func (sel *GoSelector) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
@@ -5484,9 +5578,17 @@ type GoStatic struct {
 }
 
 func (stat *GoStatic) Decl() ast.Decl {
-	vals := []ast.Expr{ stat.init.Expr(), }
+	var vtype ast.Expr
+	var vals []ast.Expr
+	if stat.init.expr == nil {
+		vtype = stat.init.govar.Type()
+		vals = nil
+	} else {
+		vtype = nil
+		vals = []ast.Expr{ stat.init.Expr(), }
+	}
 	vspec := &ast.ValueSpec{Names: []*ast.Ident{ stat.init.govar.Ident(), },
-		Values: vals}
+		Type: vtype, Values: vals}
 	return &ast.GenDecl{Tok: token.VAR, Specs: []ast.Spec{ vspec, }}
 }
 
@@ -5502,6 +5604,10 @@ func (stat *GoStatic) RunTransform(xform TransformFunc, prog *GoProgram, cls GoC
 	}
 
 	return xform(parent, prog, cls, stat)
+}
+
+func (stat *GoStatic) String() string {
+	return "GoStatic[" + stat.init.String() + "]"
 }
 
 type GoSwitch struct {

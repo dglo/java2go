@@ -18,6 +18,7 @@ type GoVar interface {
 	IsFinal() bool
 	IsStatic() bool
 	Name() string
+	Receiver() string
 	SetGoName(newname string)
 	String() string
 	Type() ast.Expr
@@ -48,7 +49,13 @@ func (gvd *GoVarData) GoName() string {
 }
 
 func (gvd *GoVarData) Equals(govar GoVar) bool {
-	return gvd == govar
+	if gvd == govar {
+		return true
+	} else if gvd == nil || govar == nil {
+		return false
+	}
+
+	return gvd.rcvr == govar.Receiver() && gvd.name == govar.Name()
 }
 
 func (gvd *GoVarData) hasVariable(govar GoVar) bool {
@@ -79,6 +86,10 @@ func (gvd *GoVarData) Name() string {
 	return gvd.name
 }
 
+func (gvd *GoVarData) Receiver() string {
+	return gvd.rcvr
+}
+
 func (gvd *GoVarData) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
 	return xform(parent, prog, cls, gvd)
 }
@@ -90,6 +101,10 @@ func (gvd *GoVarData) SetGoName(newname string) {
 func (gvd *GoVarData) String() string {
 	b := &bytes.Buffer{}
 	b.WriteString("GoVarData[")
+	if gvd.rcvr != "" {
+		b.WriteString(gvd.rcvr)
+		b.WriteString(".")
+	}
 	b.WriteString(gvd.name)
 	b.WriteString(fmt.Sprintf("<%v>->", gvd.vartype))
 	b.WriteString(gvd.goname)
@@ -186,6 +201,10 @@ func (gvr *GoClassAttribute) IsStatic() bool {
 
 func (gvr *GoClassAttribute) Name() string {
 	return gvr.govar.Name() + "." + gvr.suffix
+}
+
+func (gvr *GoClassAttribute) Receiver() string {
+	return gvr.govar.Receiver()
 }
 
 func (gvr *GoClassAttribute) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {

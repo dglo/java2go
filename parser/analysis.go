@@ -419,17 +419,11 @@ func analyzeClassBody(gs *GoState, cls *GoClassDefinition, body *grammar.JClassB
 		case *grammar.JVariableDecl:
 			govar := gs.addVariableDecl(b, true)
 
-			if cls.vars == nil {
-				cls.vars = make([]*GoVarInit, 0)
-			}
-
-			var goinit *GoVarInit
 			if b.Init == nil {
-				goinit = &GoVarInit{govar: govar}
+				cls.addVar(&GoVarInit{govar: govar})
 			} else {
-				goinit = analyzeVariableInit(gs, cls, b.Init, govar)
+				cls.addVar(analyzeVariableInit(gs, cls, b.Init, govar))
 			}
-			cls.vars = append(cls.vars, goinit)
 		default:
 			grammar.ReportCastError("Body.ClassDecl", bobj)
 		}
