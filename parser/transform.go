@@ -22,6 +22,11 @@ type GoObject interface {
 		parent GoObject) (GoObject, bool)
 }
 
+type GoTypedObject interface {
+	GoObject
+	VarType() *TypeData
+}
+
 func convertToBlock(obj GoObject) (*GoBlock, error) {
 	if blk, ok := obj.(*GoBlock); ok {
 		return blk, nil
@@ -78,6 +83,19 @@ func convertToVarInit(obj GoObject) (*GoVarInit, error) {
 	return nil, fmt.Errorf("%v<%T> is not a *GoVarInit", obj, obj)
 }
 
+func getFmtClass(prog *GoProgram) GoClass {
+	fmtcls := prog.findClass("fmt")
+	if fmtcls == nil {
+		fmtcls = NewGoFakeClass("fmt")
+		prog.addClass(fmtcls)
+
+		// make sure "fmt" is imported
+		prog.addImport("fmt", "")
+	}
+
+	return fmtcls
+}
+
 type GoPkgName struct {
 	pkg string
 	name string
@@ -122,7 +140,7 @@ func TransformArrayLen(parent GoObject, prog *GoProgram, cls GoClass,
 		return nil, true
 	}
 
-	fm := NewGoFakeMethod(nil, "len")
+	fm := NewGoFakeMethod(nil, "len", intType)
 	args := &GoMethodArguments{args: []GoExpr{ ref.govar, }}
 
 	return &GoMethodAccess{method: fm, args: args}, false
@@ -155,10 +173,7 @@ func TransformSysfile(parent GoObject, prog *GoProgram, cls GoClass,
 		return nil, true
 	}
 
-	fmtcls := &GoFakeClass{name: "fmt"}
-
-	// make sure "fmt" is imported
-	prog.addImport("fmt", "")
+	fmtcls := getFmtClass(prog)
 
 	var fixed string
 	var args *GoMethodArguments
@@ -176,7 +191,7 @@ func TransformSysfile(parent GoObject, prog *GoProgram, cls GoClass,
 		prog.addImport("os", "")
 	}
 
-	fm := NewGoFakeMethod(fmtcls, fixed)
+	fm := NewGoFakeMethod(fmtcls, fixed, nil)
 
 	return &GoMethodAccess{method: fm, args: args}, false
 }
@@ -267,7 +282,7 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 			return nil, true
 		}
 
-		apnd := NewGoFakeMethod(nil, "append")
+		apnd := NewGoFakeMethod(nil, "append", mref.govar.VarType())
 		args := &GoMethodArguments{args: []GoExpr{ mref.govar,
 			mref.args.args[0]}}
 
@@ -282,7 +297,8 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 		}
 
 		args := &GoMethodArguments{args: []GoExpr{ mref.govar, }}
-		x := &GoMethodAccess{method: NewGoFakeMethod(nil, "len"), args: args}
+		x := &GoMethodAccess{method: NewGoFakeMethod(nil, "len", intType),
+			args: args}
 		return &GoBinaryExpr{x: x, op: token.EQL, y: &GoLiteral{text: "0"}},
 		false
 	case "get":
@@ -295,7 +311,7 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 		return &GoArrayReference{govar: mref.govar, index: mref.args.args[0]},
 		false
 	case "size":
-		fm := NewGoFakeMethod(nil, "len")
+		fm := NewGoFakeMethod(nil, "len", intType)
 		args := &GoMethodArguments{args: []GoExpr{ mref.govar, }}
 
 		return &GoMethodAccess{method: fm, args: args}, false
@@ -308,6 +324,109 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 	return nil, true
 }
 
+// transform String.format method call into fmt.Sprintf
+func TransformStringFormat(parent GoObject, prog *GoProgram, cls GoClass,
+	object GoObject) (GoObject, bool) {
+
+	var mref *GoMethodReference
+	var ok bool
+	if mref, ok = object.(*GoMethodReference); !ok {
+		return nil, true
+	}
+
+	if mref.name == "format" && !mref.class.IsNil() &&
+		mref.class.Name() == "String" {
+		fmtcls := getFmtClass(prog)
+
+		return NewGoMethodReference(fmtcls, "Sprintf", mref.args, false), false
+	}
+
+	return nil, true
+}
+
+// transform string addition into fmt.Sprintf
+func TransformStringAddition(parent GoObject, prog *GoProgram, cls GoClass,
+	object GoObject) (GoObject, bool) {
+
+	var bex *GoBinaryExpr
+	var ok bool
+	if bex, ok = object.(*GoBinaryExpr); !ok {
+		return nil, true
+	}
+
+	var x GoTypedObject
+	if x, ok = bex.x.(GoTypedObject); !ok {
+		return nil, true
+	}
+
+	if x.VarType() != stringType {
+		return nil, true
+	}
+
+	return transformBinaryStringExpression(prog, bex)
+}
+
+func joinStrings(s1 string, s2 string) string {
+	if s1[0] != '"' || s1[len(s1)-1] != '"' {
+		panic(fmt.Sprintf("String %v is not quoted", s1))
+	}
+	if s2[0] != '"' || s2[len(s2)-1] != '"' {
+		panic(fmt.Sprintf("String %v is not quoted", s2))
+	}
+	s := fmt.Sprintf("\"%s%s\"", s1[1:len(s1)-1], s2[1:len(s2)-1])
+	return s
+}
+
+func transformBinaryStringExpression(prog *GoProgram, bex *GoBinaryExpr) (GoObject, bool) {
+	if bex.op != token.ADD {
+		return nil, true
+	}
+
+	switch x := bex.x.(type) {
+	case *GoLiteral:
+		if !x.isString() {
+			// ignore non-string addition
+			return nil, true
+		}
+
+		if y, ok := bex.y.(*GoLiteral); ok {
+			if y.isString() {
+				return NewGoLiteral(joinStrings(x.text, y.text)), false
+			}
+		}
+	case *GoMethodAccess:
+		if x.method.VarType() != stringType {
+			return nil, true
+		}
+
+		if x.method.Name() == "Sprintf" {
+			if fmtstr, ok := x.args.args[0].(*GoLiteral); !ok {
+				log.Printf("//ERR// First Sprintf argument should be " +
+					" *GoLiteral not %T\n", x.args.args[0])
+				return nil, true
+			} else {
+				x.args.args[0] = NewGoLiteral(joinStrings("\"%v\"",
+					fmtstr.text))
+			}
+			x.args.args = append(x.args.args, bex.y)
+			return x, false
+		}
+	}
+
+	fmtcls := getFmtClass(prog)
+
+	fmtstr := NewGoLiteral("\"%v%v\"")
+	args := &GoMethodArguments{args: []GoExpr{fmtstr, bex.x, bex.y}}
+
+	mthd := fmtcls.FindMethod("Sprintf", args)
+	if mthd == nil {
+		mthd = NewGoFakeMethod(fmtcls, "Sprintf", stringType)
+		fmtcls.AddMethod(mthd)
+	}
+
+	return &GoMethodAccess{method: mthd, args: args}, false
+}
+
 // list of standard transformation rules
 var StandardRules = []TransformFunc {
 	TransformArrayLen,
@@ -315,4 +434,6 @@ var StandardRules = []TransformFunc {
 	TransformMainArgs,
 	TransformThisArg,
 	TransformListMethods,
+	TransformStringAddition,
+	TransformStringFormat,
 }

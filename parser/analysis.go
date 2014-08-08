@@ -738,7 +738,9 @@ func analyzeMethodAccess(gs *GoState, owner GoMethodOwner,
 		} else {
 			class = gs.findClass(owner, mth.NameType.LastType())
 			if class == nil {
-				class = &GoFakeClass{name: mth.NameType.String()}
+				fcls := NewGoFakeClass(mth.NameType.String())
+				gs.Program().addClass(fcls)
+				class = fcls
 			}
 		}
 	}

@@ -11,6 +11,7 @@ import (
 	"math"
 	"os"
 	"path"
+	//"runtime/debug"
 	"sort"
 	"strings"
 
@@ -2108,6 +2109,10 @@ type GoFakeClass struct {
 	methods map[string]GoMethod
 }
 
+func NewGoFakeClass(name string) *GoFakeClass {
+	return &GoFakeClass{name: name}
+}
+
 func (gfc *GoFakeClass) AddConstant(con *GoConstant) {
 	panic("unimplemented")
 }
@@ -2118,8 +2123,11 @@ func (gfc *GoFakeClass) AddMethod(mthd GoMethod) {
 	}
 
 	if _, ok := gfc.methods[mthd.Name()]; ok {
-		log.Printf("//ERR// Adding multiple %v methods to %v\n",
-			mthd.Name(), gfc.name)
+		if gfc.name != "fmt" {
+			// don't warn about variadic functions
+			log.Printf("//ERR// Adding multiple %v methods to %v\n",
+				mthd.Name(), gfc.name)
+		}
 	}
 
 	gfc.methods[mthd.Name()] = mthd
@@ -2181,6 +2189,10 @@ func (gfc *GoFakeClass) RunTransform(xform TransformFunc, prog *GoProgram, cls G
 	return xform(parent, prog, cls, gfc)
 }
 
+func (gfc *GoFakeClass) SetPackage(pkg string) {
+	gfc.pkg = pkg
+}
+
 func (gfc *GoFakeClass) Statics() []ast.Decl {
 	return nil
 }
@@ -2207,10 +2219,11 @@ type GoFakeMethod struct {
 	class GoMethodOwner
 	name string
 	goname string
+	rtntype *TypeData
 }
 
-func NewGoFakeMethod(cls GoMethodOwner, name string) *GoFakeMethod {
-	return &GoFakeMethod{class: cls, name: name, goname: name}
+func NewGoFakeMethod(cls GoMethodOwner, name string, rtntype *TypeData) *GoFakeMethod {
+	return &GoFakeMethod{class: cls, name: name, goname: name, rtntype: rtntype}
 }
 
 func (gfm *GoFakeMethod) Arguments() []GoVar {
@@ -2278,7 +2291,7 @@ func (gfm *GoFakeMethod) SetOriginal(gcm *GoClassMethod) {
 }
 
 func (gfm *GoFakeMethod) VarType() *TypeData {
-	panic("GoFakeMethod.VarType() unimplemented")
+	return gfm.rtntype
 }
 
 func (gfm *GoFakeMethod) WriteString(out io.Writer) {
@@ -3499,6 +3512,10 @@ func (gl *GoLiteral) Init() ast.Stmt {
 	return nil
 }
 
+func (gl *GoLiteral) isString() bool {
+	return len(gl.text) > 1 && gl.text[0] == '"'
+}
+
 func (gl *GoLiteral) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
 	return xform(parent, prog, cls, gl)
 }
@@ -3760,11 +3777,15 @@ func (ma *GoMethodAccess) Expr() ast.Expr {
 	if ma.obj != nil {
 		fun = ma.obj.Expr()
 	} else {
-		if ma.method.Receiver() == nil {
-			fun = ast.NewIdent(ma.method.GoName())
-		} else {
+		if ma.method.Receiver() != nil {
 			fun = &ast.SelectorExpr{X: ma.method.Receiver().Ident(),
 				Sel: ast.NewIdent(ma.method.GoName())}
+		} else if ma.method.Class() != nil &&
+			!ma.method.Class().IsNil() {
+			fun = &ast.SelectorExpr{X: ast.NewIdent(ma.method.Class().Name()),
+				Sel: ast.NewIdent(ma.method.GoName())}
+		} else {
+			fun = ast.NewIdent(ma.method.GoName())
 		}
 	}
 
@@ -3919,7 +3940,12 @@ func (ma *GoMethodAccessExpr) String() string {
 	b.WriteString(ma.expr.String())
 	b.WriteString("|")
 	if ma.method != nil {
-		ma.method.WriteString(b)
+		var name string
+		if ma.method.Receiver() != nil {
+			name = ma.method.Receiver().Name()
+		}
+		fmt.Fprintf(b, "GoMethod[%v|%v#%d]", name, ma.method.Name(),
+			ma.method.NumParameters())
 	}
 	b.WriteString("|")
 	ma.args.WriteString(b)
@@ -4065,7 +4091,14 @@ func (ma *GoMethodAccessVar) String() string {
 	b.WriteString("GoMethodAccessVar[")
 	b.WriteString(ma.govar.String())
 	b.WriteString("|")
-	ma.method.WriteString(b)
+	if ma.method != nil {
+		var name string
+		if ma.method.Receiver() != nil {
+			name = ma.method.Receiver().Name()
+		}
+		fmt.Fprintf(b, "GoMethod[%v|%v#%d]", name, ma.method.Name(),
+			ma.method.NumParameters())
+	}
 	b.WriteString("|")
 	ma.args.WriteString(b)
 	b.WriteString("]")
@@ -4354,15 +4387,25 @@ func (mref *GoMethodReference) WriteString(out io.Writer) {
 	}
 	io.WriteString(out, "|")
 	if mref.args != nil {
-		mref.args.WriteString(out)
+		io.WriteString(out, "Args[")
+		for i, arg := range mref.args.args {
+			if i > 0 {
+				io.WriteString(out, ",")
+			}
+
+			if arg == nil {
+				io.WriteString(out, "nil")
+			} else if arg.VarType() == nil {
+				fmt.Fprintf(out, "/* %v<%T> */", arg, arg)
+			} else {
+				io.WriteString(out, arg.VarType().Name())
+			}
+		}
+		io.WriteString(out, "]")
 	}
 	io.WriteString(out, "|")
 	if mref.ref != nil {
-		io.WriteString(out, fmt.Sprintf("%T[", mref.ref))
-		io.WriteString(out, mref.ref.name)
-		io.WriteString(out, "/")
-		io.WriteString(out, mref.ref.goname)
-		io.WriteString(out, "]")
+		fmt.Fprintf(out, "%T[%s/%s]", mref.ref, mref.ref.name, mref.ref.goname)
 	}
 	io.WriteString(out, "]")
 }
@@ -4764,8 +4807,9 @@ func (gp *GoProgram) analyzeImports(pgm *grammar.JProgramFile) {
 			pkgstr := jimp.Name.PackageString()
 			iname := gp.config.findPackage(pkgstr)
 			if iname == "" {
-				gp.addClass(&GoFakeClass{pkg: pkgstr,
-					name: jimp.Name.LastType()})
+				gfc := NewGoFakeClass(jimp.Name.LastType())
+				gfc.SetPackage(pkgstr)
+				gp.addClass(gfc)
 				log.Printf("Faking import for %v\n", jimp.Name.String())
 				continue
 			}
@@ -5351,7 +5395,7 @@ func (gs *GoState) addClassDecl(parent GoMethodOwner, jcls *grammar.JClassDecl) 
 		extname := jcls.Extends.Name.LastType()
 		cls.super = gs.Program().findClass(extname)
 		if cls.super == nil {
-			cls.super = &GoFakeClass{name: extname}
+			cls.super = NewGoFakeClass(extname)
 			gs.Program().addClass(cls.super)
 		}
 	}
