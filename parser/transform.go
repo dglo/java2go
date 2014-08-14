@@ -324,6 +324,43 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 	return nil, true
 }
 
+// transform various toString() calls into fmt.Sprintf
+func TransformToString(parent GoObject, prog *GoProgram, cls GoClass,
+	object GoObject) (GoObject, bool) {
+
+	var macc *GoMethodAccess
+	var ok bool
+	if macc, ok = object.(*GoMethodAccess); !ok {
+		return nil, true
+	}
+
+	if macc.method.Name() != "toString" {
+		return nil, true
+	}
+
+	if len(macc.args.args) == 1 {
+		alist := make([]GoExpr, 2)
+		alist[0] = NewGoLiteral("\"%v\"")
+		alist[1] = macc.args.args[0]
+
+		args := &GoMethodArguments{args: alist}
+
+		fmtcls := getFmtClass(prog)
+
+		mthd := fmtcls.FindMethod("Sprintf", args)
+		if mthd == nil {
+			mthd = NewGoFakeMethod(fmtcls, "Sprintf", stringType)
+			fmtcls.AddMethod(mthd)
+		}
+
+		return &GoMethodAccess{method: mthd, args: args}, false
+	}
+
+	log.Printf("//ERR// Cannot convert %v toString() with %d args\n",
+		macc.method, len(macc.args.args))
+	return nil, true
+}
+
 // transform String.format method call into fmt.Sprintf
 func TransformStringFormat(parent GoObject, prog *GoProgram, cls GoClass,
 	object GoObject) (GoObject, bool) {
@@ -434,6 +471,7 @@ var StandardRules = []TransformFunc {
 	TransformMainArgs,
 	TransformThisArg,
 	TransformListMethods,
+	TransformToString,
 	TransformStringAddition,
 	TransformStringFormat,
 }
