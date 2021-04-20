@@ -13,9 +13,9 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/dglo/java2go/dumper"
-	"github.com/dglo/java2go/grammar"
-	"github.com/dglo/java2go/parser"
+	"java2go/dumper"
+	"java2go/grammar"
+	"java2go/parser"
 )
 
 const sep = "------------"
@@ -38,20 +38,20 @@ func analyze(jp *grammar.JProgramFile, path string, config *parser.Config,
 }
 
 func convertPathToGo(path string) string {
-    i := strings.LastIndex(path, "/")
+	i := strings.LastIndex(path, "/")
 
-    var name string
-    if i < 0 {
-        name = path
-    } else {
-        name = path[i+1:]
-    }
+	var name string
+	if i < 0 {
+		name = path
+	} else {
+		name = path[i+1:]
+	}
 
-    if strings.HasSuffix(strings.ToLower(name), ".java") {
-        name = name[:len(name)-5]
-    }
+	if strings.HasSuffix(strings.ToLower(name), ".java") {
+		name = name[:len(name)-5]
+	}
 
-    return name + ".go"
+	return name + ".go"
 }
 
 func dump(gp *parser.GoProgram) {
@@ -106,7 +106,9 @@ func parseGo(path string) {
 
 func parseJava(path string, cfg *parser.Config, dirPath string,
 	debugLex, print_report, verbose bool) {
-	if verbose { fmt.Printf("// %s\n", path) }
+	if verbose {
+		fmt.Printf("// %s\n", path)
+	}
 	l := grammar.NewFileLexer(path, debugLex)
 	if l != nil {
 		defer func() {

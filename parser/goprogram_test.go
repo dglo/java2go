@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dglo/java2go/grammar"
-	"github.com/dglo/java2go/testutil"
+	"java2go/grammar"
+	"java2go/testutil"
 )
 
 func Test_FixName(t *testing.T) {

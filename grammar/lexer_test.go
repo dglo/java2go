@@ -3,7 +3,7 @@ package grammar
 import (
 	"testing"
 
-	"github.com/dglo/java2go/testutil"
+	"java2go/testutil"
 )
 
 func Test_FileLexer(t *testing.T) {

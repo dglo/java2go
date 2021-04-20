@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dglo/java2go/testutil"
+	"java2go/testutil"
 )
 
 func Test_TypeData_Primitive(t *testing.T) {
-	allTypes := []string {
+	allTypes := []string{
 		"void", "boolean", "byte", "char", "short",
 		"int", "long", "float", "double", "string",
 	}
@@ -83,7 +83,7 @@ func Test_TypeData_Object(t *testing.T) {
 	fd.dict["abc"] = true
 	fd.dict["def"] = false
 
-	for _, str := range []string { "abc", "def", "ghi" } {
+	for _, str := range []string{"abc", "def", "ghi"} {
 		for dim := 0; dim < 5; dim++ {
 			td := NewTypeDataObject(fd, str, dim)
 			validate(t, str, dim, td, fd)

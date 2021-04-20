@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dglo/java2go/testutil"
+	"java2go/testutil"
 )
 
 func fillFile(t *testing.T) string {
