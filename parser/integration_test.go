@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dglo/java2go/grammar"
-	"github.com/dglo/java2go/testutil"
+	"java2go/grammar"
+	"java2go/testutil"
 )
 
 func Test_Main(t *testing.T) {
@@ -21,7 +21,7 @@ func Test_Main(t *testing.T) {
 		"   System.err.printf(\"Arg#%d=%s\\n\", i, args[i]);\n" +
 		"  }\n" +
 		" }\n" +
-		"}\n";
+		"}\n"
 
 	rdr := grammar.NewStringReader(src)
 

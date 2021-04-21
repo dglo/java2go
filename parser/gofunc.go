@@ -4,7 +4,7 @@ import (
 	"go/ast"
 	"go/token"
 
-	"github.com/dglo/java2go/grammar"
+	"java2go/grammar"
 )
 
 type GoFunc interface {
@@ -15,12 +15,12 @@ type GoFunc interface {
 }
 
 type GoFuncData struct {
-	class string
-	name string
-	goname string
+	class     string
+	name      string
+	goname    string
 	func_type methodType
-	rcvr string
-	params []*grammar.JFormalParameter
+	rcvr      string
+	params    []*grammar.JFormalParameter
 }
 
 func (gf *GoFuncData) Create() ast.Stmt {

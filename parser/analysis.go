@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"go/token"
 	"log"
+
 	//"os"
 
-	"github.com/dglo/java2go/grammar"
+	"java2go/grammar"
 )
 
 func findMethod(owner GoMethodOwner, class GoMethodOwner, name string,
@@ -97,7 +98,7 @@ func analyzeAllocationExpr(gs *GoState, owner GoMethodOwner,
 				body = append(body, stmt)
 			}
 		case *grammar.JEmpty:
-			; // do nothing
+			// do nothing
 		default:
 			grammar.ReportCastError("JClassAllocationExpr.body", b)
 		}
@@ -132,10 +133,10 @@ func analyzeAllocationExpr(gs *GoState, owner GoMethodOwner,
 	}
 
 	arglist := &GoMethodArguments{args}
-	mthd := findMethod(owner, cref, "New" + cref.Name(), arglist,
+	mthd := findMethod(owner, cref, "New"+cref.Name(), arglist,
 		gs.Program().verbose)
 
-	return &GoClassAlloc{class: cref, method: mthd,  type_args: type_args,
+	return &GoClassAlloc{class: cref, method: mthd, type_args: type_args,
 		args: args, body: body}
 }
 
@@ -406,12 +407,12 @@ func analyzeClassBody(gs *GoState, cls *GoClassDefinition, body *grammar.JClassB
 			gs.Program().addEnum(b)
 		case *grammar.JInterfaceDecl:
 			log.Printf("//ERR// Ignoring class body %T\n", b)
-/*
-			idecl := analyzeInterfaceDeclaration(gs, b)
-			if idecl != nil {
-				decls = append(decls, idecl)
-			}
-*/
+			/*
+				idecl := analyzeInterfaceDeclaration(gs, b)
+				if idecl != nil {
+					decls = append(decls, idecl)
+				}
+			*/
 		case *grammar.JMethodDecl:
 			cls.AddNewMethod(gs, b)
 		case *grammar.JUnimplemented:
@@ -865,35 +866,35 @@ func analyzeStmt(gs *GoState, owner GoMethodOwner,
 	jstmt grammar.JObject) []GoStatement {
 	switch stmt := jstmt.(type) {
 	case *grammar.JAssignmentExpr:
-		return []GoStatement{ analyzeAssignExpr(gs, owner, stmt), }
+		return []GoStatement{analyzeAssignExpr(gs, owner, stmt)}
 	case *grammar.JBlock:
-		return []GoStatement{ analyzeBlock(gs, owner, stmt), }
+		return []GoStatement{analyzeBlock(gs, owner, stmt)}
 	case *grammar.JForColon:
-		return []GoStatement{ analyzeForColon(gs, owner, stmt), }
+		return []GoStatement{analyzeForColon(gs, owner, stmt)}
 	case *grammar.JForVar:
-		return []GoStatement{ analyzeForVar(gs, owner, stmt), }
+		return []GoStatement{analyzeForVar(gs, owner, stmt)}
 	case *grammar.JIfElseStmt:
-		return []GoStatement{ analyzeIfElseStmt(gs, owner, stmt), }
+		return []GoStatement{analyzeIfElseStmt(gs, owner, stmt)}
 	case *grammar.JJumpToLabel:
-		return []GoStatement{ NewGoJumpToLabel(stmt.Label, stmt.IsContinue), }
+		return []GoStatement{NewGoJumpToLabel(stmt.Label, stmt.IsContinue)}
 	case *grammar.JLocalVariableDecl:
 		return analyzeLocalVariableDeclaration(gs, owner, stmt)
 	case *grammar.JSimpleStatement:
-		return []GoStatement{ analyzeSimpleStatement(gs, owner, stmt), }
+		return []GoStatement{analyzeSimpleStatement(gs, owner, stmt)}
 	case *grammar.JTry:
-		return []GoStatement{ analyzeTry(gs, owner, stmt), }
+		return []GoStatement{analyzeTry(gs, owner, stmt)}
 	case *grammar.JUnaryExpr:
-		return []GoStatement{ analyzeUnaryExpr(gs, owner, stmt), }
+		return []GoStatement{analyzeUnaryExpr(gs, owner, stmt)}
 	case *grammar.JUnimplemented:
 		log.Printf("//ERR// Not analyzing unimplemented stmt %s\n", stmt.TypeStr)
-		return []GoStatement{ &GoUnimplemented{fname: "stmt",
-			text: stmt.TypeStr}, }
+		return []GoStatement{&GoUnimplemented{fname: "stmt",
+			text: stmt.TypeStr}}
 	case *grammar.JWhile:
-		return []GoStatement{ analyzeWhile(gs, owner, stmt), }
+		return []GoStatement{analyzeWhile(gs, owner, stmt)}
 	default:
 		log.Printf("//ERR// Not analyzing stmt %T\n", stmt)
-		return []GoStatement{ &GoUnimplemented{fname: "stmt",
-			text: fmt.Sprintf("%T", stmt)}, }
+		return []GoStatement{&GoUnimplemented{fname: "stmt",
+			text: fmt.Sprintf("%T", stmt)}}
 	}
 }
 
@@ -939,10 +940,10 @@ func analyzeSwitchCase(gs *GoState, owner GoMethodOwner,
 	need_fall := true
 	l := len(stmts)
 	if l > 0 {
-		switch br := stmts[l - 1].(type) {
+		switch br := stmts[l-1].(type) {
 		case *GoBranchStmt:
 			if br.tok == token.BREAK {
-				stmts = stmts[0:l-1]
+				stmts = stmts[0 : l-1]
 				need_fall = false
 			}
 		case *GoJumpToLabel:
@@ -966,7 +967,7 @@ func analyzeSwitchLabel(gs *GoState, owner GoMethodOwner,
 	var expr GoExpr
 	if jsl.Name != "" {
 		expr = &GoLiteral{text: jsl.Name}
-	} else if  jsl.Expr != nil {
+	} else if jsl.Expr != nil {
 		expr = analyzeExpr(gs, owner, jsl.Expr)
 	} else {
 		panic("Empty switch label")

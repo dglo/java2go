@@ -11,12 +11,13 @@ import (
 	"math"
 	"os"
 	"path"
+
 	//"runtime/debug"
 	"sort"
 	"strings"
 
-	"github.com/dglo/java2go/dumper"
-	"github.com/dglo/java2go/grammar"
+	"java2go/dumper"
+	"java2go/grammar"
 )
 
 // assign new struct to receiver
@@ -135,9 +136,9 @@ func (fv *FakeVar) VarType() *TypeData {
 }
 
 type FileManager struct {
-	set *token.FileSet
+	set  *token.FileSet
 	file *token.File
-	off int
+	off  int
 }
 
 func NewFileManager(name string) *FileManager {
@@ -163,15 +164,15 @@ type GoArrayExpr interface {
 
 type GoArrayAlloc struct {
 	typedata *TypeData
-	args []GoExpr
+	args     []GoExpr
 }
 
 func (aa *GoArrayAlloc) Expr() ast.Expr {
-	args := make([]ast.Expr, len(aa.args) + 1)
+	args := make([]ast.Expr, len(aa.args)+1)
 	args[0] = &ast.ArrayType{Elt: aa.typedata.Expr()}
 	if aa.args != nil && len(aa.args) > 0 {
 		for i, arg := range aa.args {
-			args[i + 1] = arg.Expr()
+			args[i+1] = arg.Expr()
 		}
 	}
 
@@ -229,7 +230,7 @@ func (aa *GoArrayAlloc) VarType() *TypeData {
 
 type GoArrayInit struct {
 	typedata *TypeData
-	elems []GoExpr
+	elems    []GoExpr
 }
 
 func (ai *GoArrayInit) Expr() ast.Expr {
@@ -294,7 +295,7 @@ func (ai *GoArrayInit) VarType() *TypeData {
 
 type GoArrayReference struct {
 	govar GoVar
-	obj GoExpr
+	obj   GoExpr
 	index GoExpr
 }
 
@@ -464,8 +465,8 @@ func (nae *GoArrayReference) VarType() *TypeData {
 
 type GoAssign struct {
 	govar GoVar
-	tok token.Token
-	rhs []GoExpr
+	tok   token.Token
+	rhs   []GoExpr
 }
 
 func (asgn *GoAssign) Expr() ast.Expr {
@@ -532,7 +533,7 @@ func (asgn *GoAssign) Stmts() []ast.Stmt {
 		}
 	}
 
-	return []ast.Stmt { &ast.AssignStmt{Lhs: lhs, Tok: asgn.tok, Rhs: rhs}, }
+	return []ast.Stmt{&ast.AssignStmt{Lhs: lhs, Tok: asgn.tok, Rhs: rhs}}
 }
 
 func (asgn *GoAssign) String() string {
@@ -559,9 +560,9 @@ func (asgn *GoAssign) VarType() *TypeData {
 }
 
 type GoBinaryExpr struct {
-	x GoExpr
+	x  GoExpr
 	op token.Token
-	y GoExpr
+	y  GoExpr
 }
 
 func (bex *GoBinaryExpr) BinaryExpr() *ast.BinaryExpr {
@@ -680,7 +681,7 @@ func (blk *GoBlock) RunTransform(xform TransformFunc, prog *GoProgram, cls GoCla
 }
 
 func (blk *GoBlock) Stmts() []ast.Stmt {
-	return []ast.Stmt { blk.BlockStmt(), }
+	return []ast.Stmt{blk.BlockStmt()}
 }
 
 func (blk *GoBlock) String() string {
@@ -702,7 +703,7 @@ func (blk *GoBlock) VarType() *TypeData {
 }
 
 type GoBranchStmt struct {
-	tok token.Token
+	tok   token.Token
 	label string
 }
 
@@ -720,7 +721,7 @@ func (bs *GoBranchStmt) Stmts() []ast.Stmt {
 		label = ast.NewIdent(bs.label)
 	}
 
-	return []ast.Stmt { &ast.BranchStmt{Tok: bs.tok, Label: label}, }
+	return []ast.Stmt{&ast.BranchStmt{Tok: bs.tok, Label: label}}
 }
 
 func (bs *GoBranchStmt) String() string {
@@ -732,7 +733,7 @@ func (bs *GoBranchStmt) VarType() *TypeData {
 }
 
 type GoCastType struct {
-	target GoExpr
+	target   GoExpr
 	casttype *TypeData
 }
 
@@ -812,11 +813,11 @@ func makeClassKeyFromParts(parent GoMethodOwner, name string) string {
 }
 
 type GoClassAlloc struct {
-	class GoClass
-	method GoMethod
+	class     GoClass
+	method    GoMethod
 	type_args []*TypeData
-	args []GoExpr
-	body []GoStatement
+	args      []GoExpr
+	body      []GoStatement
 }
 
 func (gca *GoClassAlloc) Expr() ast.Expr {
@@ -924,15 +925,15 @@ func (gca *GoClassAlloc) VarType() *TypeData {
 }
 
 type GoClassDefinition struct {
-	program *GoProgram
-	parent GoMethodOwner
-	super GoClass
-	name string
-	constants []*GoConstant
-	statics []*GoStatic
-	vars []*GoVarInit
+	program    *GoProgram
+	parent     GoMethodOwner
+	super      GoClass
+	name       string
+	constants  []*GoConstant
+	statics    []*GoStatic
+	vars       []*GoVarInit
 	interfaces []GoInterface
-	methods *classMethodMap
+	methods    *classMethodMap
 }
 
 func NewGoClassDefinition(program *GoProgram, parent GoMethodOwner,
@@ -1305,7 +1306,7 @@ func (cls *GoClassDefinition) Statics() []ast.Decl {
 }
 
 func (cls *GoClassDefinition) String() string {
-    return fmt.Sprintf("%s{%d methods}", cls.name, cls.methods.Length())
+	return fmt.Sprintf("%s{%d methods}", cls.name, cls.methods.Length())
 }
 
 func (cls *GoClassDefinition) struct_type() *ast.StructType {
@@ -1347,14 +1348,14 @@ func (cls *GoClassDefinition) WriteString(out io.Writer, verbose bool) {
 }
 
 type GoClassMethod struct {
-	class GoMethodOwner
-	name string
-	goname string
-	typedata *TypeData
-	rcvr GoVar
+	class       GoMethodOwner
+	name        string
+	goname      string
+	typedata    *TypeData
+	rcvr        GoVar
 	method_type methodType
-	params []GoVar
-	body *GoBlock
+	params      []GoVar
+	body        *GoBlock
 }
 
 func NewGoClassMethod(class GoMethodOwner, gs *GoState, jmth *grammar.JMethodDecl) *GoClassMethod {
@@ -1415,8 +1416,6 @@ func NewGoClassMethod(class GoMethodOwner, gs *GoState, jmth *grammar.JMethodDec
 				govar := gs2.addVariable(fp.Name, fp.Modifiers, fp.Dims,
 					fp.TypeSpec, false)
 
-
-
 				params[i] = govar
 			}
 		}
@@ -1470,7 +1469,7 @@ func NewGoClassMethod(class GoMethodOwner, gs *GoState, jmth *grammar.JMethodDec
 		}
 
 		if !has_this {
-			list := []GoStatement { assignNewStruct(rvar, class) }
+			list := []GoStatement{assignNewStruct(rvar, class)}
 
 			if mthd.body == nil {
 				mthd.body = &GoBlock{stmts: list}
@@ -1505,7 +1504,7 @@ func (mthd *GoClassMethod) Decl() ast.Decl {
 		Recv: mthd.recv(), Type: mtype, Body: mthd.body.BlockStmt()}
 }
 
-func (mthd *GoClassMethod)  Field() *ast.Field {
+func (mthd *GoClassMethod) Field() *ast.Field {
 	return nil
 }
 
@@ -1691,9 +1690,9 @@ func (mthd *GoClassMethod) WriteString(out io.Writer) {
 }
 
 type GoClassReference struct {
-	name string
+	name   string
 	parent GoMethodOwner
-	cls *GoClassDefinition
+	cls    *GoClassDefinition
 }
 
 func (cref *GoClassReference) AddConstant(con *GoConstant) {
@@ -1798,16 +1797,16 @@ func (cref *GoClassReference) WriteString(out io.Writer, verbose bool) {
 }
 
 type GoConstant struct {
-	name string
+	name     string
 	typedata *TypeData
-	init *GoVarInit
+	init     *GoVarInit
 }
 
 func (con *GoConstant) Decl() ast.Decl {
-	vals := []ast.Expr{ con.init.Expr(), }
-	vspec := &ast.ValueSpec{Names: []*ast.Ident{ ast.NewIdent(con.name), },
+	vals := []ast.Expr{con.init.Expr()}
+	vspec := &ast.ValueSpec{Names: []*ast.Ident{ast.NewIdent(con.name)},
 		Values: vals}
-	return &ast.GenDecl{Tok: token.CONST, Specs: []ast.Spec{ vspec, }}
+	return &ast.GenDecl{Tok: token.CONST, Specs: []ast.Spec{vspec}}
 }
 
 func (con *GoConstant) Expr() ast.Expr {
@@ -1902,10 +1901,10 @@ func (con *GoConstant) WriteString(out io.Writer) {
 }
 
 type GoNewStruct struct {
-	rcvr GoVar
-	cls GoMethodOwner
+	rcvr     GoVar
+	cls      GoMethodOwner
 	is_super bool
-	args *GoMethodArguments
+	args     *GoMethodArguments
 }
 
 func NewGoNewStruct(rcvr GoVar, cls GoMethodOwner, is_super bool,
@@ -1953,8 +1952,8 @@ func (gsc *GoNewStruct) Stmts() []ast.Stmt {
 	rhs[0] = &ast.CallExpr{Fun: ast.NewIdent("New" + gsc.cls.Name()),
 		Args: args}
 
-	return []ast.Stmt { &ast.AssignStmt{Lhs: lhs, Tok: token.ASSIGN,
-		Rhs: rhs}, }
+	return []ast.Stmt{&ast.AssignStmt{Lhs: lhs, Tok: token.ASSIGN,
+		Rhs: rhs}}
 }
 
 func (gsc *GoNewStruct) String() string {
@@ -1985,15 +1984,15 @@ type GoEnumConstant struct {
 func (ec *GoEnumConstant) ValueSpec(num int, typeident *ast.Ident) *ast.ValueSpec {
 	var vals []ast.Expr
 	if num == 0 {
-		vals = []ast.Expr{ ast.NewIdent("iota"), }
+		vals = []ast.Expr{ast.NewIdent("iota")}
 	}
 
 	if typeident == nil {
-		return &ast.ValueSpec{Names: []*ast.Ident{ ast.NewIdent(ec.name), },
+		return &ast.ValueSpec{Names: []*ast.Ident{ast.NewIdent(ec.name)},
 			Values: vals}
 	}
 
-	return &ast.ValueSpec{Names: []*ast.Ident{ ast.NewIdent(ec.name), },
+	return &ast.ValueSpec{Names: []*ast.Ident{ast.NewIdent(ec.name)},
 		Type: typeident, Values: vals}
 }
 
@@ -2005,23 +2004,24 @@ func (ec *GoEnumConstant) WriteString(out io.Writer) {
 
 // enumSlice is a []*GoEnumDefinition wrapper for sort.Sort()
 type enumSlice []*GoEnumDefinition
-func (p enumSlice) Len() int { return len(p) }
+
+func (p enumSlice) Len() int           { return len(p) }
 func (p enumSlice) Less(i, j int) bool { return p[i].name < p[j].name }
-func (p enumSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p enumSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 type GoEnumDefinition struct {
-	name string
+	name      string
 	constants []*GoEnumConstant
 }
 
 func (enum *GoEnumDefinition) Decls(gp *GoProgram) []ast.Decl {
 	typeident := ast.NewIdent(enum.name)
 
-	tspecs := []ast.Spec{ &ast.TypeSpec{Name: typeident,
+	tspecs := []ast.Spec{&ast.TypeSpec{Name: typeident,
 		Type: ast.NewIdent("int")}}
 	tdecl := &ast.GenDecl{Tok: token.TYPE, Specs: tspecs}
 
-	decls := []ast.Decl{ tdecl, }
+	decls := []ast.Decl{tdecl}
 
 	specs := make([]ast.Spec, len(enum.constants))
 
@@ -2092,7 +2092,7 @@ func (exst *GoExprStmt) RunTransform(xform TransformFunc, prog *GoProgram, cls G
 }
 
 func (exst *GoExprStmt) Stmts() []ast.Stmt {
-	return []ast.Stmt { &ast.ExprStmt{X: exst.x.Expr()}, }
+	return []ast.Stmt{&ast.ExprStmt{X: exst.x.Expr()}}
 }
 
 func (exst *GoExprStmt) String() string {
@@ -2104,8 +2104,8 @@ func (exst *GoExprStmt) VarType() *TypeData {
 }
 
 type GoFakeClass struct {
-	pkg string
-	name string
+	pkg     string
+	name    string
 	methods map[string]GoMethod
 }
 
@@ -2216,9 +2216,9 @@ func (gfc *GoFakeClass) WriteString(out io.Writer, verbose bool) {
 }
 
 type GoFakeMethod struct {
-	class GoMethodOwner
-	name string
-	goname string
+	class   GoMethodOwner
+	name    string
+	goname  string
 	rtntype *TypeData
 }
 
@@ -2306,8 +2306,8 @@ func (gfm *GoFakeMethod) WriteString(out io.Writer) {
 
 type GoForColon struct {
 	govar GoVar
-	expr GoExpr
-	body *GoBlock
+	expr  GoExpr
+	body  *GoBlock
 }
 
 func (fc *GoForColon) hasVariable(govar GoVar) bool {
@@ -2360,8 +2360,8 @@ func (fc *GoForColon) Stmts() []ast.Stmt {
 
 	rs := &ast.RangeStmt{Key: ast.NewIdent("_"),
 		Value: ast.NewIdent(fc.govar.GoName()),
-		Tok: token.DEFINE, X: expr, Body: fc.body.BlockStmt()}
-	return []ast.Stmt { rs, }
+		Tok:   token.DEFINE, X: expr, Body: fc.body.BlockStmt()}
+	return []ast.Stmt{rs}
 }
 
 func (fc *GoForColon) String() string {
@@ -2375,9 +2375,9 @@ func (fc *GoForColon) String() string {
 }
 
 type GoForExpr struct {
-	init []GoExpr
-	cond GoExpr
-	incr []GoExpr
+	init  []GoExpr
+	cond  GoExpr
+	incr  []GoExpr
 	block *GoBlock
 }
 
@@ -2487,8 +2487,8 @@ func (fe *GoForExpr) Stmts() []ast.Stmt {
 		block = fe.block.BlockStmt()
 	}
 
-	return []ast.Stmt { &ast.ForStmt{Init: init, Cond: cond, Post: post,
-		Body: block}, }
+	return []ast.Stmt{&ast.ForStmt{Init: init, Cond: cond, Post: post,
+		Body: block}}
 }
 
 func (fe *GoForExpr) String() string {
@@ -2523,9 +2523,9 @@ func (fe *GoForExpr) String() string {
 
 type GoForVar struct {
 	govar GoVar
-	init GoExpr
-	cond GoExpr
-	incr []GoStatement
+	init  GoExpr
+	cond  GoExpr
+	incr  []GoStatement
 	block *GoBlock
 }
 
@@ -2674,8 +2674,8 @@ func (gfv *GoForVar) Stmts() []ast.Stmt {
 		block = &ast.BlockStmt{List: list}
 	}
 
-	return []ast.Stmt { &ast.ForStmt{Init: init, Cond: cond, Post: post,
-		Body: block}, }
+	return []ast.Stmt{&ast.ForStmt{Init: init, Cond: cond, Post: post,
+		Body: block}}
 }
 
 func (gfv *GoForVar) String() string {
@@ -2710,9 +2710,9 @@ func (gfv *GoForVar) String() string {
 }
 
 type GoIfaceMethod struct {
-	name string
-	goname string
-	param_list []GoVar
+	name        string
+	goname      string
+	param_list  []GoVar
 	result_type *TypeData
 }
 
@@ -2888,8 +2888,8 @@ func (gm *GoIfaceMethod) WriteString(out io.Writer) {
 }
 
 type GoIfElse struct {
-    cond GoExpr
-	ifblk GoStatement
+	cond    GoExpr
+	ifblk   GoStatement
 	elseblk GoStatement
 }
 
@@ -2978,7 +2978,7 @@ func (gie *GoIfElse) RunTransform(xform TransformFunc, prog *GoProgram, cls GoCl
 }
 
 func (gie *GoIfElse) Stmts() []ast.Stmt {
-	return []ast.Stmt { gie.IfStmt(), }
+	return []ast.Stmt{gie.IfStmt()}
 }
 
 func (gie *GoIfElse) String() string {
@@ -2992,7 +2992,7 @@ func (gie *GoIfElse) String() string {
 }
 
 type GoImportPackage struct {
-	name string
+	name    string
 	classes map[string]*GoImportClass
 }
 
@@ -3017,7 +3017,7 @@ func (gip *GoImportPackage) ImportSpec() *ast.ImportSpec {
 }
 
 type GoImportClass struct {
-	pkg *GoImportPackage
+	pkg  *GoImportPackage
 	name string
 }
 
@@ -3026,7 +3026,7 @@ func (gic *GoImportClass) FullName() string {
 }
 
 type GoInstanceOf struct {
-	expr GoExpr
+	expr    GoExpr
 	vartype GoVar
 }
 
@@ -3047,11 +3047,11 @@ func (gio *GoInstanceOf) hasVariable(govar GoVar) bool {
 }
 
 func (gio *GoInstanceOf) Init() ast.Stmt {
-	lhs := []ast.Expr { ast.NewIdent("_"), ast.NewIdent("ok") }
-	asrt := &ast.TypeAssertExpr{X: gio.expr.Expr(), Type: gio.vartype.Ident() }
+	lhs := []ast.Expr{ast.NewIdent("_"), ast.NewIdent("ok")}
+	asrt := &ast.TypeAssertExpr{X: gio.expr.Expr(), Type: gio.vartype.Ident()}
 
 	return &ast.AssignStmt{Lhs: lhs, Tok: token.DEFINE,
-		Rhs: []ast.Expr { asrt, }}
+		Rhs: []ast.Expr{asrt}}
 }
 
 func (gio *GoInstanceOf) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
@@ -3110,14 +3110,15 @@ type GoInterface interface {
 
 // InterfaceSlice is a GoInterface wrapper for sort.Sort()
 type InterfaceSlice []GoInterface
-func (p InterfaceSlice) Len() int { return len(p) }
+
+func (p InterfaceSlice) Len() int           { return len(p) }
 func (p InterfaceSlice) Less(i, j int) bool { return p[i].Name() < p[j].Name() }
-func (p InterfaceSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p InterfaceSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 type GoInterfaceDefinition struct {
 	name string
 
-	methods *interfaceMethodMap
+	methods   *interfaceMethodMap
 	constants []*GoConstant
 }
 
@@ -3143,16 +3144,16 @@ func (gi *GoInterfaceDefinition) Constants() []ast.Decl {
 
 	decllist := make([]ast.Decl, 0)
 	for _, c := range gi.constants {
-		names := []*ast.Ident{ ast.NewIdent(c.name), }
+		names := []*ast.Ident{ast.NewIdent(c.name)}
 		var vals []ast.Expr
 		if c.init != nil {
-			vals = []ast.Expr{ c.init.Expr() }
+			vals = []ast.Expr{c.init.Expr()}
 		}
 
 		spec := &ast.ValueSpec{Names: names, Type: c.typedata.Expr(),
-			Values: vals }
+			Values: vals}
 		decllist = append(decllist, &ast.GenDecl{Tok: token.CONST,
-			Specs: []ast.Spec{ spec, }})
+			Specs: []ast.Spec{spec}})
 	}
 
 	return decllist
@@ -3211,7 +3212,7 @@ func (gi *GoInterfaceDefinition) Matches(name *grammar.JTypeName) bool {
 }
 
 func (gi *GoInterfaceDefinition) Name() string {
-    return gi.name
+	return gi.name
 }
 
 func (gi *GoInterfaceDefinition) renumberDuplicateMethods(gp *GoProgram) {
@@ -3255,8 +3256,8 @@ func (gi *GoInterfaceDefinition) WriteString(out io.Writer, verbose bool) {
 }
 
 type GoInterfaceReference struct {
-	name *grammar.JTypeName
-	gp *GoProgram
+	name      *grammar.JTypeName
+	gp        *GoProgram
 	realiface *GoInterfaceDefinition
 }
 
@@ -3328,7 +3329,7 @@ func (ref *GoInterfaceReference) WriteString(out io.Writer, verbose bool) {
 
 type GoJumpToLabel struct {
 	is_continue bool
-	label string
+	label       string
 }
 
 func NewGoJumpToLabel(label string, is_continue bool) *GoJumpToLabel {
@@ -3356,7 +3357,7 @@ func (j2l *GoJumpToLabel) Stmts() []ast.Stmt {
 		lbl = ast.NewIdent(j2l.label)
 	}
 
-	return []ast.Stmt { &ast.BranchStmt{Tok: tok, Label: lbl}, }
+	return []ast.Stmt{&ast.BranchStmt{Tok: tok, Label: lbl}}
 }
 
 func (j2l *GoJumpToLabel) String() string {
@@ -3375,7 +3376,7 @@ func (j2l *GoJumpToLabel) String() string {
 
 type GoKeyword struct {
 	token int
-	name string
+	name  string
 }
 
 func NewGoKeyword(token int, name string) *GoKeyword {
@@ -3430,7 +3431,7 @@ func (key *GoKeyword) VarType() *TypeData {
 
 type GoLabeledStmt struct {
 	label string
-	stmt GoStatement
+	stmt  GoStatement
 }
 
 func (gl *GoLabeledStmt) hasVariable(govar GoVar) bool {
@@ -3456,8 +3457,8 @@ func (gl *GoLabeledStmt) Stmts() []ast.Stmt {
 	if is_nil {
 		return nil
 	}
-	return []ast.Stmt { &ast.LabeledStmt{Label: ast.NewIdent(gl.label),
-		Stmt: stmt}, }
+	return []ast.Stmt{&ast.LabeledStmt{Label: ast.NewIdent(gl.label),
+		Stmt: stmt}}
 }
 
 func (gl *GoLabeledStmt) Init() ast.Stmt {
@@ -3497,7 +3498,7 @@ func (gl *GoLiteral) Expr() ast.Expr {
 		if !strings.HasSuffix(gl.text, "L") {
 			value = gl.text
 		} else {
-			value = gl.text[0:len(gl.text)-1]
+			value = gl.text[0 : len(gl.text)-1]
 		}
 	}
 
@@ -3541,7 +3542,7 @@ type GoLocalVarNoInit struct {
 }
 
 func NewGoLocalVarNoInit(govar GoVar) *GoLocalVarNoInit {
-	return &GoLocalVarNoInit{govar: govar};
+	return &GoLocalVarNoInit{govar: govar}
 }
 
 func (glv *GoLocalVarNoInit) hasVariable(govar GoVar) bool {
@@ -3569,8 +3570,8 @@ func (glv *GoLocalVarNoInit) Stmts() []ast.Stmt {
 	specs := make([]ast.Spec, 1)
 	specs[0] = &ast.ValueSpec{Names: names, Type: glv.govar.Type()}
 
-	return []ast.Stmt { &ast.DeclStmt{Decl: &ast.GenDecl{Tok: token.VAR,
-		Specs: specs}}, }
+	return []ast.Stmt{&ast.DeclStmt{Decl: &ast.GenDecl{Tok: token.VAR,
+		Specs: specs}}}
 }
 
 func (glv *GoLocalVarNoInit) String() string {
@@ -3579,7 +3580,7 @@ func (glv *GoLocalVarNoInit) String() string {
 
 type GoLocalVarInit struct {
 	govar GoVar
-	init GoExpr
+	init  GoExpr
 }
 
 func NewGoLocalVarInit(govar GoVar, init GoExpr) *GoLocalVarInit {
@@ -3587,7 +3588,7 @@ func NewGoLocalVarInit(govar GoVar, init GoExpr) *GoLocalVarInit {
 		panic("Local variable init expression cannot be nil")
 	}
 
-	return &GoLocalVarInit{govar: govar, init: init};
+	return &GoLocalVarInit{govar: govar, init: init}
 }
 
 func (glv *GoLocalVarInit) hasVariable(govar GoVar) bool {
@@ -3631,7 +3632,7 @@ func (glv *GoLocalVarInit) Stmts() []ast.Stmt {
 
 	tok := token.DEFINE
 
-	return []ast.Stmt { &ast.AssignStmt{Lhs: lhs, Tok: tok, Rhs: rhs}, }
+	return []ast.Stmt{&ast.AssignStmt{Lhs: lhs, Tok: tok, Rhs: rhs}}
 }
 
 func (glv *GoLocalVarInit) String() string {
@@ -3641,7 +3642,7 @@ func (glv *GoLocalVarInit) String() string {
 
 type GoLocalVarCast struct {
 	govar GoVar
-	cast GoExpr
+	cast  GoExpr
 }
 
 func NewGoLocalVarCast(govar GoVar, cast GoExpr) *GoLocalVarCast {
@@ -3735,12 +3736,17 @@ const (
 )
 
 func (mt methodType) String() string {
-	switch (mt) {
-	case mt_test: return "mt_test"
-	case mt_constructor: return "mt_constructor"
-	case mt_static: return "mt_static"
-	case mt_method: return "mt_method"
-	case mt_main: return "mt_main"
+	switch mt {
+	case mt_test:
+		return "mt_test"
+	case mt_constructor:
+		return "mt_constructor"
+	case mt_static:
+		return "mt_static"
+	case mt_method:
+		return "mt_method"
+	case mt_main:
+		return "mt_main"
 	}
 
 	return "mt_??unknown??"
@@ -3767,9 +3773,9 @@ type GoMethod interface {
 }
 
 type GoMethodAccess struct {
-	obj GoExpr
+	obj    GoExpr
 	method GoMethod
-	args *GoMethodArguments
+	args   *GoMethodArguments
 }
 
 func (ma *GoMethodAccess) Expr() ast.Expr {
@@ -3867,9 +3873,9 @@ func (ma *GoMethodAccess) VarType() *TypeData {
 }
 
 type GoMethodAccessExpr struct {
-	expr GoExpr
+	expr   GoExpr
 	method GoMethod
-	args *GoMethodArguments
+	args   *GoMethodArguments
 }
 
 func (ma *GoMethodAccessExpr) Expr() ast.Expr {
@@ -3963,7 +3969,7 @@ func (ma *GoMethodAccessExpr) VarType() *TypeData {
 
 type GoMethodAccessKeyword struct {
 	is_super bool
-	args *GoMethodArguments
+	args     *GoMethodArguments
 }
 
 func (ma *GoMethodAccessKeyword) Expr() ast.Expr {
@@ -4024,9 +4030,9 @@ func (ma *GoMethodAccessKeyword) VarType() *TypeData {
 }
 
 type GoMethodAccessVar struct {
-	govar GoVar
+	govar  GoVar
 	method GoMethod
-	args *GoMethodArguments
+	args   *GoMethodArguments
 }
 
 func (ma *GoMethodAccessVar) Expr() ast.Expr {
@@ -4201,12 +4207,12 @@ type GoMethodOwner interface {
 var refcnt int
 
 type GoMethodReference struct {
-	class GoMethodOwner
-	name string
+	class  GoMethodOwner
+	name   string
 	goname string
-	args *GoMethodArguments
-	ref *GoClassMethod
-	cnt int
+	args   *GoMethodArguments
+	ref    *GoClassMethod
+	cnt    int
 }
 
 func NewGoMethodReference(class GoMethodOwner, name string,
@@ -4356,7 +4362,7 @@ func (mref *GoMethodReference) SetGoName(newname string) {
 func (mref *GoMethodReference) SetOriginal(mthd *GoClassMethod) {
 	if mref.ref != mthd {
 		if mref.ref != nil {
-			log.Printf("//ERR// found multiple method replacements");
+			log.Printf("//ERR// found multiple method replacements")
 		}
 
 		mref.ref = mthd
@@ -4556,19 +4562,19 @@ func (pt *GoPrimitiveType) VarType() *TypeData {
 }
 
 type GoProgram struct {
-	name string
-	config *Config
+	name    string
+	config  *Config
 	verbose bool
 
-	import_map map[string]*GoImportPackage
+	import_map   map[string]*GoImportPackage
 	import_types map[string]*GoImportClass
 
-	pkgname string
-	enums []*GoEnumDefinition
+	pkgname    string
+	enums      []*GoEnumDefinition
 	interfaces []GoInterface
-	classes map[string]GoClass
+	classes    map[string]GoClass
 
-	mgr *FileManager
+	mgr  *FileManager
 	file *ast.File
 }
 
@@ -4751,7 +4757,7 @@ func (gp *GoProgram) analyzeCode(pgm *grammar.JProgramFile) {
 				if kcls, ok := gp.classes[k]; ok {
 					if kcls != v {
 						if gp.verbose {
-							log.Printf("GoState class %v<%T> overrides" +
+							log.Printf("GoState class %v<%T> overrides"+
 								" GoProgram class %v<%T>\n", v, v, kcls, kcls)
 						} else {
 							log.Printf("GoState class overrides" +
@@ -4993,7 +4999,7 @@ func (gp *GoProgram) findInterface(name *grammar.JTypeName) GoInterface {
 	return nil
 }
 
-func (gp *GoProgram) Imports() [] *ast.ImportSpec {
+func (gp *GoProgram) Imports() []*ast.ImportSpec {
 	imports := make([]*ast.ImportSpec, len(gp.import_map))
 
 	var i int
@@ -5074,9 +5080,9 @@ func (gp *GoProgram) setPackage(pgm *grammar.JProgramFile) {
 func (gp *GoProgram) Write(topdir string) error {
 	var dirpath string
 	if gp.pkgname == "" || gp.pkgname == "main" {
-	    dirpath = topdir
+		dirpath = topdir
 	} else {
-	    dirpath = path.Join(topdir, gp.pkgname)
+		dirpath = path.Join(topdir, gp.pkgname)
 	}
 
 	if err := os.MkdirAll(dirpath, os.ModeDir|0755); err != nil {
@@ -5187,7 +5193,7 @@ func (rtn *GoReturn) Stmts() []ast.Stmt {
 		results[0] = rtn.expr.Expr()
 	}
 
-	return []ast.Stmt { &ast.ReturnStmt{Results: results}, }
+	return []ast.Stmt{&ast.ReturnStmt{Results: results}}
 }
 
 func (rtn *GoReturn) String() string {
@@ -5202,7 +5208,7 @@ func (rtn *GoReturn) String() string {
 
 type GoSelector struct {
 	expr GoExpr
-	sel GoVar
+	sel  GoVar
 }
 
 func NewGoSelector(expr GoExpr, sel GoVar) *GoSelector {
@@ -5316,10 +5322,10 @@ func (sel *GoSelector) VarType() *TypeData {
 }
 
 type GoState struct {
-	parent *GoState
+	parent  *GoState
 	program *GoProgram
-	class *GoClassDefinition
-	vars map[string]GoVar
+	class   *GoClassDefinition
+	vars    map[string]GoVar
 	classes map[string]GoClass
 }
 
@@ -5340,7 +5346,7 @@ func (gs *GoState) addClass(nref GoClass) {
 	} else {
 		// panic if this is a class reference
 		if !ocls.IsReference() {
-			panic(fmt.Sprintf("GoProgram already contains class reference" +
+			panic(fmt.Sprintf("GoProgram already contains class reference"+
 				" for %v", nref.Name()))
 		}
 
@@ -5385,7 +5391,7 @@ func (gs *GoState) addClassDecl(parent GoMethodOwner, jcls *grammar.JClassDecl) 
 
 		if jcls.Extends.TypeArgs != nil && len(jcls.Extends.TypeArgs) > 0 {
 			if gs.Program().verbose {
-				log.Printf("//ERR// Not handling %v type_args in extended" +
+				log.Printf("//ERR// Not handling %v type_args in extended"+
 					" class %v\n", jcls.Extends.Name, jcls.Name)
 			} else {
 				log.Printf("//ERR// Not handling type_args in extended class\n")
@@ -5427,7 +5433,7 @@ func (gs *GoState) addClassDecl(parent GoMethodOwner, jcls *grammar.JClassDecl) 
 				cls.AddMethod(m)
 			}
 		case *grammar.JEmpty:
-			; // do nothing
+			// do nothing
 		default:
 			grammar.ReportCastError("JClassDecl", jobj)
 		}
@@ -5442,7 +5448,7 @@ func (gs *GoState) addVariable(name string, modifiers *grammar.JModifiers, dims 
 	if typespec != nil {
 		// "String[] a[]" creates a 2D array of Strings
 		vartype = gs.Program().createTypeData(typespec.Name,
-			typespec.TypeArgs, typespec.Dims + dims)
+			typespec.TypeArgs, typespec.Dims+dims)
 	}
 
 	if gs.vars == nil {
@@ -5510,10 +5516,10 @@ func (gs *GoState) dumpVariables(fd io.Writer, indentLevel int) {
 	}
 
 	for _, v := range gs.vars {
-		fmt.Fprintf(fd, indent + v.String() + "\n")
+		fmt.Fprintf(fd, indent+v.String()+"\n")
 	}
 	if gs.parent != nil {
-		gs.parent.dumpVariables(fd, indentLevel + 1)
+		gs.parent.dumpVariables(fd, indentLevel+1)
 	}
 }
 
@@ -5629,11 +5635,11 @@ func (stat *GoStatic) Decl() ast.Decl {
 		vals = nil
 	} else {
 		vtype = nil
-		vals = []ast.Expr{ stat.init.Expr(), }
+		vals = []ast.Expr{stat.init.Expr()}
 	}
-	vspec := &ast.ValueSpec{Names: []*ast.Ident{ stat.init.govar.Ident(), },
+	vspec := &ast.ValueSpec{Names: []*ast.Ident{stat.init.govar.Ident()},
 		Type: vtype, Values: vals}
-	return &ast.GenDecl{Tok: token.VAR, Specs: []ast.Spec{ vspec, }}
+	return &ast.GenDecl{Tok: token.VAR, Specs: []ast.Spec{vspec}}
 }
 
 func (stat *GoStatic) RunTransform(xform TransformFunc, prog *GoProgram, cls GoClass, parent GoObject) (GoObject, bool) {
@@ -5655,7 +5661,7 @@ func (stat *GoStatic) String() string {
 }
 
 type GoSwitch struct {
-	expr GoExpr
+	expr  GoExpr
 	cases []*GoSwitchCase
 }
 
@@ -5739,8 +5745,8 @@ func (gsw *GoSwitch) Stmts() []ast.Stmt {
 		nextCase++
 	}
 
-	return []ast.Stmt { &ast.SwitchStmt{Tag: gsw.expr.Expr(),
-		Body: &ast.BlockStmt{List: cases}}, }
+	return []ast.Stmt{&ast.SwitchStmt{Tag: gsw.expr.Expr(),
+		Body: &ast.BlockStmt{List: cases}}}
 }
 
 func (gsw *GoSwitch) String() string {
@@ -5760,7 +5766,7 @@ func (gsw *GoSwitch) String() string {
 
 type GoSwitchCase struct {
 	labels []*GoSwitchLabel
-	stmts []GoStatement
+	stmts  []GoStatement
 }
 
 func (gsc *GoSwitchCase) hasVariable(govar GoVar) bool {
@@ -5826,7 +5832,7 @@ func (gsc *GoSwitchCase) String() string {
 
 type GoSwitchLabel struct {
 	is_default bool
-	expr GoExpr
+	expr       GoExpr
 }
 
 func (gsl *GoSwitchLabel) hasVariable(govar GoVar) bool {
@@ -5871,7 +5877,7 @@ func (gsl *GoSwitchLabel) String() string {
 }
 
 type GoSynchronized struct {
-	expr GoExpr
+	expr  GoExpr
 	block *GoBlock
 }
 
@@ -5918,8 +5924,8 @@ func (sync *GoSynchronized) Stmts() []ast.Stmt {
 	sexpr := &ast.CallExpr{Fun: ast.NewIdent("synchronized"),
 		Args: sargs}
 
-	return []ast.Stmt { &ast.IfStmt{Cond: sexpr,
-		Body: sync.block.BlockStmt()}, }
+	return []ast.Stmt{&ast.IfStmt{Cond: sexpr,
+		Body: sync.block.BlockStmt()}}
 }
 
 func (sync *GoSynchronized) String() string {
@@ -5950,11 +5956,11 @@ func (thr *GoThrow) RunTransform(xform TransformFunc, prog *GoProgram, cls GoCla
 }
 
 func (thr *GoThrow) Stmts() []ast.Stmt {
-	targs := []ast.Expr { thr.expr.Expr(), }
+	targs := []ast.Expr{thr.expr.Expr()}
 
 	x := &ast.CallExpr{Fun: ast.NewIdent("throw"), Args: targs}
 
-	return []ast.Stmt { &ast.ExprStmt{X: x }, }
+	return []ast.Stmt{&ast.ExprStmt{X: x}}
 }
 
 func (thr *GoThrow) String() string {
@@ -5962,7 +5968,7 @@ func (thr *GoThrow) String() string {
 }
 
 type GoTry struct {
-	block *GoBlock
+	block   *GoBlock
 	catches []*GoTryCatch
 	finally *GoBlock
 }
@@ -6050,7 +6056,7 @@ func (try *GoTry) Stmts() []ast.Stmt {
 		cur_if = f_if
 	}
 
-	return []ast.Stmt { top_if, }
+	return []ast.Stmt{top_if}
 }
 
 func (try *GoTry) String() string {
@@ -6121,7 +6127,7 @@ func (gtc *GoTryCatch) String() string {
 
 type GoUnaryExpr struct {
 	op token.Token
-	x GoExpr
+	x  GoExpr
 }
 
 func (uex *GoUnaryExpr) Expr() ast.Expr {
@@ -6160,7 +6166,7 @@ func (uex *GoUnaryExpr) Stmts() []ast.Stmt {
 		stmt = &ast.ExprStmt{X: uex.Expr()}
 	}
 
-	return []ast.Stmt {stmt, }
+	return []ast.Stmt{stmt}
 }
 
 func (uex *GoUnaryExpr) String() string {
@@ -6177,7 +6183,7 @@ func (uex *GoUnaryExpr) VarType() *TypeData {
 
 type GoUnimplemented struct {
 	fname string
-	text string
+	text  string
 }
 
 func (un *GoUnimplemented) hasVariable(govar GoVar) bool {
@@ -6217,7 +6223,7 @@ func (un *GoUnimplemented) RunTransform(xform TransformFunc, prog *GoProgram, cl
 }
 
 func (un *GoUnimplemented) Stmts() []ast.Stmt {
-	return []ast.Stmt{ &ast.ExprStmt{X: un.Expr()}, }
+	return []ast.Stmt{&ast.ExprStmt{X: un.Expr()}}
 }
 
 func (un *GoUnimplemented) String() string {
@@ -6233,8 +6239,8 @@ func (un *GoUnimplemented) VarType() *TypeData {
 }
 
 type GoVarInit struct {
-	govar GoVar
-	expr GoExpr
+	govar    GoVar
+	expr     GoExpr
 	elements []GoExpr
 }
 
@@ -6346,8 +6352,8 @@ func (gvi *GoVarInit) VarType() *TypeData {
 }
 
 type GoWhile struct {
-	expr GoExpr
-	stmt GoStatement
+	expr        GoExpr
+	stmt        GoStatement
 	is_do_while bool
 }
 
@@ -6397,8 +6403,8 @@ func (while *GoWhile) Stmts() []ast.Stmt {
 		var is_nil bool
 		if stmt, is_nil = singleStatement("While expression",
 			while.stmt.Stmts()); is_nil {
-				stmt = nil
-			}
+			stmt = nil
+		}
 	}
 
 	var body *ast.BlockStmt
@@ -6424,7 +6430,7 @@ func (while *GoWhile) Stmts() []ast.Stmt {
 		expr = nil
 	}
 
-	return []ast.Stmt{ &ast.ForStmt{Cond: expr, Body: body}, }
+	return []ast.Stmt{&ast.ForStmt{Cond: expr, Body: body}}
 }
 
 func (while *GoWhile) String() string {

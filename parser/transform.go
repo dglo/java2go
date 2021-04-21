@@ -1,18 +1,18 @@
 package parser
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
-	"fmt"
 	"log"
 	"strings"
 
-	"github.com/dglo/java2go/grammar"
+	"java2go/grammar"
 )
 
 // list of Java classes which inherit from AbstractList
-var javaListType = []string { "List", "ArrayList", "LinkedList", "Stack",
-	"Vector" }
+var javaListType = []string{"List", "ArrayList", "LinkedList", "Stack",
+	"Vector"}
 
 type TransformFunc func(parent GoObject, prog *GoProgram, cls GoClass,
 	object GoObject) (GoObject, bool)
@@ -97,7 +97,7 @@ func getFmtClass(prog *GoProgram) GoClass {
 }
 
 type GoPkgName struct {
-	pkg string
+	pkg  string
 	name string
 }
 
@@ -141,7 +141,7 @@ func TransformArrayLen(parent GoObject, prog *GoProgram, cls GoClass,
 	}
 
 	fm := NewGoFakeMethod(nil, "len", intType)
-	args := &GoMethodArguments{args: []GoExpr{ ref.govar, }}
+	args := &GoMethodArguments{args: []GoExpr{ref.govar}}
 
 	return &GoMethodAccess{method: fm, args: args}, false
 }
@@ -283,10 +283,10 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 		}
 
 		apnd := NewGoFakeMethod(nil, "append", mref.govar.VarType())
-		args := &GoMethodArguments{args: []GoExpr{ mref.govar,
+		args := &GoMethodArguments{args: []GoExpr{mref.govar,
 			mref.args.args[0]}}
 
-		rhs := []GoExpr{ &GoMethodAccess{method: apnd, args: args}, }
+		rhs := []GoExpr{&GoMethodAccess{method: apnd, args: args}}
 
 		return &GoAssign{govar: mref.govar, tok: token.ASSIGN, rhs: rhs}, false
 	case "isEmpty":
@@ -296,11 +296,11 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 			return nil, true
 		}
 
-		args := &GoMethodArguments{args: []GoExpr{ mref.govar, }}
+		args := &GoMethodArguments{args: []GoExpr{mref.govar}}
 		x := &GoMethodAccess{method: NewGoFakeMethod(nil, "len", intType),
 			args: args}
 		return &GoBinaryExpr{x: x, op: token.EQL, y: &GoLiteral{text: "0"}},
-		false
+			false
 	case "get":
 		if len(mref.args.args) != 1 {
 			log.Printf("//ERR// Cannot convert %v get() with %d args\n",
@@ -309,10 +309,10 @@ func TransformListMethods(parent GoObject, prog *GoProgram, cls GoClass,
 		}
 
 		return &GoArrayReference{govar: mref.govar, index: mref.args.args[0]},
-		false
+			false
 	case "size":
 		fm := NewGoFakeMethod(nil, "len", intType)
-		args := &GoMethodArguments{args: []GoExpr{ mref.govar, }}
+		args := &GoMethodArguments{args: []GoExpr{mref.govar}}
 
 		return &GoMethodAccess{method: fm, args: args}, false
 	default:
@@ -438,7 +438,7 @@ func transformBinaryStringExpression(prog *GoProgram, bex *GoBinaryExpr) (GoObje
 
 		if x.method.Name() == "Sprintf" {
 			if fmtstr, ok := x.args.args[0].(*GoLiteral); !ok {
-				log.Printf("//ERR// First Sprintf argument should be " +
+				log.Printf("//ERR// First Sprintf argument should be "+
 					" *GoLiteral not %T\n", x.args.args[0])
 				return nil, true
 			} else {
@@ -465,7 +465,7 @@ func transformBinaryStringExpression(prog *GoProgram, bex *GoBinaryExpr) (GoObje
 }
 
 // list of standard transformation rules
-var StandardRules = []TransformFunc {
+var StandardRules = []TransformFunc{
 	TransformArrayLen,
 	TransformSysfile,
 	TransformMainArgs,
